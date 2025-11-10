@@ -1,0 +1,636 @@
+openapi: '3.0.3'
+info:
+  title: Photoshoot Management API
+  description: REST API for managing photoshoots, photos, and comments
+  version: '1.0.0'
+servers:
+  - url: http://localhost:3000/api
+    description: Development server
+
+paths:
+  /photoshoots:
+    get:
+      summary: Get all photoshoots
+      tags:
+        - Photoshoots
+      responses:
+        '200':
+          description: List of photoshoots
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Photoshoot'
+        '500':
+          description: Server error
+          
+    post:
+      summary: Create a new photoshoot
+      tags:
+        - Photoshoots
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePhotoshoot'
+      responses:
+        '201':
+          description: Photoshoot created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Photoshoot'
+        '409':
+          description: Photoshoot with this title already exists
+        '422':
+          description: Validation error
+        '500':
+          description: Server error
+
+  /photoshoots/{photoshootId}:
+    get:
+      summary: Get a specific photoshoot
+      tags:
+        - Photoshoots
+      parameters:
+        - name: photoshootId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Photoshoot details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Photoshoot'
+        '400':
+          description: Invalid photoshoot ID
+        '404':
+          description: Photoshoot not found
+        '500':
+          description: Server error
+          
+    put:
+      summary: Update a photoshoot
+      tags:
+        - Photoshoots
+      parameters:
+        - name: photoshootId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePhotoshoot'
+      responses:
+        '200':
+          description: Photoshoot updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Photoshoot'
+        '400':
+          description: Invalid photoshoot ID
+        '404':
+          description: Photoshoot not found
+        '422':
+          description: Validation error
+        '500':
+          description: Server error
+          
+    delete:
+      summary: Delete a photoshoot
+      tags:
+        - Photoshoots
+      parameters:
+        - name: photoshootId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Photoshoot deleted
+        '400':
+          description: Invalid photoshoot ID
+        '404':
+          description: Photoshoot not found
+        '500':
+          description: Server error
+
+  /photoshoots/{photoshootId}/photos:
+    get:
+      summary: Get all photos for a photoshoot
+      tags:
+        - Photos
+      parameters:
+        - name: photoshootId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of photos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Photo'
+        '400':
+          description: Invalid photoshoot ID
+        '404':
+          description: Photoshoot not found
+        '500':
+          description: Server error
+          
+    post:
+      summary: Create a new photo in a photoshoot
+      tags:
+        - Photos
+      parameters:
+        - name: photoshootId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePhoto'
+      responses:
+        '201':
+          description: Photo created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Photo'
+        '400':
+          description: Invalid photoshoot ID
+        '404':
+          description: Photoshoot not found
+        '422':
+          description: Validation error
+        '500':
+          description: Server error
+
+  /photoshoots/{photoshootId}/photos/{photoId}:
+    get:
+      summary: Get a specific photo
+      tags:
+        - Photos
+      parameters:
+        - name: photoshootId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: photoId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Photo details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Photo'
+        '400':
+          description: Invalid ID
+        '404':
+          description: Photo or photoshoot not found
+        '500':
+          description: Server error
+          
+    put:
+      summary: Update a photo
+      tags:
+        - Photos
+      parameters:
+        - name: photoshootId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: photoId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePhoto'
+      responses:
+        '200':
+          description: Photo updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Photo'
+        '400':
+          description: Invalid ID
+        '404':
+          description: Photo or photoshoot not found
+        '422':
+          description: Validation error
+        '500':
+          description: Server error
+          
+    delete:
+      summary: Delete a photo
+      tags:
+        - Photos
+      parameters:
+        - name: photoshootId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: photoId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Photo deleted
+        '400':
+          description: Invalid ID
+        '404':
+          description: Photo or photoshoot not found
+        '500':
+          description: Server error
+
+  /photoshoots/{photoshootId}/photos/{photoId}/comments:
+    get:
+      summary: Get all comments for a photo
+      tags:
+        - Comments
+      parameters:
+        - name: photoshootId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: photoId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of comments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Comment'
+        '400':
+          description: Invalid ID
+        '404':
+          description: Photo or photoshoot not found
+        '500':
+          description: Server error
+          
+    post:
+      summary: Create a new comment on a photo
+      tags:
+        - Comments
+      parameters:
+        - name: photoshootId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: photoId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateComment'
+      responses:
+        '201':
+          description: Comment created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '400':
+          description: Invalid ID
+        '404':
+          description: Photo or photoshoot not found
+        '422':
+          description: Validation error
+        '500':
+          description: Server error
+
+  /photoshoots/{photoshootId}/photos/{photoId}/comments/{commentId}:
+    get:
+      summary: Get a specific comment
+      tags:
+        - Comments
+      parameters:
+        - name: photoshootId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: photoId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: commentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Comment details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '400':
+          description: Invalid ID
+        '404':
+          description: Comment not found
+        '500':
+          description: Server error
+          
+    put:
+      summary: Update a comment
+      tags:
+        - Comments
+      parameters:
+        - name: photoshootId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: photoId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: commentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateComment'
+      responses:
+        '200':
+          description: Comment updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '400':
+          description: Invalid ID
+        '404':
+          description: Comment not found
+        '422':
+          description: Validation error
+        '500':
+          description: Server error
+          
+    delete:
+      summary: Delete a comment
+      tags:
+        - Comments
+      parameters:
+        - name: photoshootId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: photoId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: commentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Comment deleted
+        '400':
+          description: Invalid ID
+        '404':
+          description: Comment not found
+        '500':
+          description: Server error
+
+components:
+  schemas:
+    Photoshoot:
+      type: object
+      required:
+        - id
+        - title
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          maxLength: 50
+          example: "Summer Wedding 2024"
+        description:
+          type: string
+          nullable: true
+          example: "Beautiful outdoor wedding ceremony"
+        date:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2024-06-15T14:30:00Z"
+        ownerId:
+          type: integer
+          nullable: true
+          example: 1
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-10-06T10:30:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2024-10-06T10:30:00Z"
+          
+    CreatePhotoshoot:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          maxLength: 50
+          example: "Summer Wedding 2024"
+        description:
+          type: string
+          nullable: true
+          example: "Beautiful outdoor wedding ceremony"
+        date:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2024-06-15T14:30:00Z"
+        ownerId:
+          type: integer
+          nullable: true
+          example: 1
+          
+    UpdatePhotoshoot:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 50
+          example: "Summer Wedding 2024"
+        description:
+          type: string
+          nullable: true
+          example: "Beautiful outdoor wedding ceremony"
+        date:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2024-06-15T14:30:00Z"
+        ownerId:
+          type: integer
+          nullable: true
+          example: 1
+          
+    Photo:
+      type: object
+      required:
+        - id
+        - photoshootId
+        - filename
+        - created_at
+      properties:
+        id:
+          type: integer
+          example: 1
+        photoshootId:
+          type: integer
+          example: 1
+        filename:
+          type: string
+          example: "IMG_1234.jpg"
+        caption:
+          type: string
+          nullable: true
+          example: "Bride and groom at sunset"
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-10-06T10:30:00Z"
+          
+    CreatePhoto:
+      type: object
+      required:
+        - filename
+      properties:
+        filename:
+          type: string
+          example: "IMG_1234.jpg"
+        caption:
+          type: string
+          nullable: true
+          example: "Bride and groom at sunset"
+          
+    UpdatePhoto:
+      type: object
+      properties:
+        filename:
+          type: string
+          example: "IMG_1234.jpg"
+        caption:
+          type: string
+          nullable: true
+          example: "Bride and groom at sunset"
+          
+    Comment:
+      type: object
+      required:
+        - id
+        - photoId
+        - authorId
+        - body
+        - created_at
+      properties:
+        id:
+          type: integer
+          example: 1
+        photoId:
+          type: integer
+          example: 1
+        authorId:
+          type: integer
+          example: 1
+        body:
+          type: string
+          example: "Beautiful composition!"
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-10-06T10:30:00Z"
+          
+    CreateComment:
+      type: object
+      required:
+        - authorId
+        - body
+      properties:
+        authorId:
+          type: integer
+          example: 1
+        body:
+          type: string
+          example: "Beautiful composition!"
+          
+    UpdateComment:
+      type: object
+      properties:
+        authorId:
+          type: integer
+          example: 1
+        body:
+          type: string
+          example: "Beautiful composition!"
