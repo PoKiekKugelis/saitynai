@@ -1,14 +1,14 @@
 services:
-  postgres:
+  database:
     image: postgres:latest
     container_name: photo_db
+    ports:
+      - "127.0.0.1:5430:5432"
     environment:
       POSTGRES_PASSWORD: mysecretpassword
-    ports:
-      - "5430:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql
+    restart: unless-stopped
 
 volumes:
-  pgdata:
-    driver: local
+  postgres-data: {}

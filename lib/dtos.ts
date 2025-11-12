@@ -58,14 +58,13 @@ export interface CommentDTO {
 }
 
 export const CreateCommentDTOZ = z.object({
-  authorId: z.number().int().positive(),
   body: z.string().min(2).max(500),
 });
 
 export type CreateCommentDTO = z.infer<typeof CreateCommentDTOZ>;
 
 export const UpdateCommentDTOZ = z.object({
-  body: z.string().min(1).max(500),
+  body: z.string().min(2).max(500),
 });
 
 export type UpdateCommentDTO = z.infer<typeof UpdateCommentDTOZ>;

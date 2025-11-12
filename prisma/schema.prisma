@@ -40,3 +40,10 @@ model Comment {
 
   @@index([photoId])
 }
+
+model User {
+    id        Int     @id @default(autoincrement())
+    email     String  @unique @db.VarChar(50)
+    password  String  @db.VarChar(50)
+    role      Boolean @default(false)
+  }

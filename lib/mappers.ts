@@ -1,7 +1,7 @@
 import type { Photoshoot, Photo, Comment } from '@prisma/client';
-import { 
-  PhotoshootDTO, 
-  PhotoDTO, 
+import {
+  PhotoshootDTO,
+  PhotoDTO,
   CommentDTO,
   CreatePhotoshootDTO,
   CreatePhotoDTO,
@@ -10,6 +10,8 @@ import {
   UpdatePhotoDTO,
   UpdateCommentDTO
 } from './dtos';
+import { promises } from 'dns';
+import { Session } from 'inspector';
 
 export function photoshootToDTO(ps: Photoshoot): PhotoshootDTO {
   return {
@@ -53,12 +55,12 @@ export function createPhotoshootDTOToPrisma(dto: CreatePhotoshootDTO) {
 
 export function updatePhotoshootDTOToPrisma(dto: UpdatePhotoshootDTO) {
   const updateData: any = {};
-  
+
   if (dto.title !== undefined) updateData.title = dto.title;
   if (dto.description !== undefined) updateData.description = dto.description;
   if (dto.date !== undefined) updateData.date = dto.date ? new Date(dto.date) : null;
   if (dto.ownerId !== undefined) updateData.ownerId = dto.ownerId;
-  
+
   return updateData;
 }
 
@@ -72,17 +74,17 @@ export function createPhotoDTOToPrisma(dto: CreatePhotoDTO, photoshootId: string
 
 export function updatePhotoDTOToPrisma(dto: UpdatePhotoDTO) {
   const updateData: any = {};
-  
+
   if (dto.filename !== undefined) updateData.filename = dto.filename;
   if (dto.caption !== undefined) updateData.caption = dto.caption;
-  
+
   return updateData;
 }
 
-export function createCommentDTOToPrisma(dto: CreateCommentDTO, photoId: string) {
+export function createCommentDTOToPrisma(dto: CreateCommentDTO, photoId: number, autherId: number) {
   return {
-    photoId: parseInt(photoId),
-    authorId: dto.authorId,
+    photoId: photoId,
+    authorId: autherId,
     body: dto.body,
   };
 }

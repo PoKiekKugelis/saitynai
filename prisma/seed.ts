@@ -63,6 +63,13 @@ async function main() {
     });
     console.log("Created comment:", comment);
   }
+  await prisma.user.createMany({
+    data: [
+      { email: 'admin@example.com', password: 'admin123', role: 'ADMIN' },
+      { email: 'user@example.com', password: 'user123', role: 'USER' },
+    ],
+  })
+
 
   console.log("Seed completed successfully!");
 }

@@ -2,17 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { UpdatePhotoDTOZ } from "@/lib/dtos";
 import { photoToDTO, updatePhotoDTOToPrisma } from "@/lib/mappers";
+import { requireRole } from "@/lib/auth";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { photoshootId: string, photoId: string } }
 ) {
+  const session = await requireRole(["ADMIN", "USER"])
+  if (session instanceof NextResponse) return session
+
   try {
     const { photoshootId, photoId } = await params;
     const id = parseInt(photoId);
     const psId = parseInt(photoshootId);
 
-    const errorResponse = await PhotoShootErrorCheck(psId);
+    const errorResponse = await PhotoShootErrorCheck(psId, session);
     if (errorResponse) {
       return errorResponse;
     }
@@ -23,18 +27,18 @@ export async function GET(
         { status: 400 }
       );
     }
-    
+
     const photo = await prisma.photo.findUnique({
       where: { id },
     });
-    
+
     if (!photo) {
       return NextResponse.json(
         { error: "Photo not found" },
         { status: 404 }
       );
     }
-    
+
     return NextResponse.json(photoToDTO(photo), { status: 200 });
   } catch (error: any) {
     console.error("Error fetching photo:", error);
@@ -49,12 +53,15 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: { photoshootId: string, photoId: string } }
 ) {
+  const session = await requireRole(["ADMIN"])
+  if (session instanceof NextResponse) return session
+
   try {
     const { photoshootId, photoId } = await params;
     const id = parseInt(photoId);
     const psId = parseInt(photoshootId);
 
-    const errorResponse = await PhotoShootErrorCheck(psId);
+    const errorResponse = await PhotoShootErrorCheck(psId, session);
     if (errorResponse) {
       return errorResponse;
     }
@@ -65,18 +72,18 @@ export async function PUT(
         { status: 400 }
       );
     }
-    
+
     const photo = await prisma.photo.findUnique({
       where: { id },
     });
-    
+
     if (!photo) {
       return NextResponse.json(
         { error: "Photo not found" },
         { status: 404 }
       );
     }
-    
+
     const body = await request.json();
     const validationResult = UpdatePhotoDTOZ.safeParse(body);
     if (!validationResult.success) {
@@ -85,13 +92,13 @@ export async function PUT(
         { status: 422 }
       );
     }
-    
+
     const updateDTO = validationResult.data;
     const updatedPhoto = await prisma.photo.update({
-          where: { id },
-          data: updatePhotoDTOToPrisma(updateDTO),
-        });
-    
+      where: { id },
+      data: updatePhotoDTOToPrisma(updateDTO),
+    });
+
     return NextResponse.json(photoToDTO(updatedPhoto), { status: 200 });
   } catch (error: any) {
     return NextResponse.json(
@@ -105,12 +112,15 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { photoshootId: string, photoId: string } }
 ) {
+  const session = await requireRole(["ADMIN"])
+  if (session instanceof NextResponse) return session
+
   try {
     const { photoshootId, photoId } = await params;
     const id = parseInt(photoId);
     const psId = parseInt(photoshootId);
 
-    const errorResponse = await PhotoShootErrorCheck(psId);
+    const errorResponse = await PhotoShootErrorCheck(psId, session);
     if (errorResponse) {
       return errorResponse;
     }
@@ -121,22 +131,22 @@ export async function DELETE(
         { status: 400 }
       );
     }
-    
+
     const photo = await prisma.photo.findUnique({
       where: { id },
     });
-    
+
     if (!photo) {
       return NextResponse.json(
         { error: "Photo not found" },
         { status: 404 }
       );
     }
-    
+
     await prisma.photo.delete({
       where: { id }
     });
-    
+
     return NextResponse.json(
       { message: "Photo deleted successfully" },
       { status: 200 }
@@ -149,22 +159,29 @@ export async function DELETE(
   }
 }
 
-export async function PhotoShootErrorCheck(id: number) {
+async function PhotoShootErrorCheck(id: number, session: any) {
   if (isNaN(id)) {
-      return NextResponse.json(
-        { error: "Invalid photoshoot ID" },
-        { status: 400 }
-      );
-    }
+    return NextResponse.json(
+      { error: "Invalid photoshoot ID" },
+      { status: 400 }
+    );
+  }
 
-    const photoshoot = await prisma.photoshoot.findUnique({
-      where: { id }
-    });
-    
-    if (!photoshoot) {
-      return NextResponse.json(
-        { error: "photoshoot not found" },
-        { status: 404 }
-      );
-    }
+  const photoshoot = await prisma.photoshoot.findUnique({
+    where: { id }
+  });
+
+  if (!photoshoot) {
+    return NextResponse.json(
+      { error: "photoshoot not found" },
+      { status: 404 }
+    );
+  }
+
+  if (photoshoot.ownerId != session.user.id && session.user.role != "ADMIN") {
+    return NextResponse.json(
+      { error: "Forbidden - no permissions" },
+      { status: 403 }
+    )
+  }
 }

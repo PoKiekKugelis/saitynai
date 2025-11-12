@@ -2,14 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { CreatePhotoshootDTOZ } from "@/lib/dtos";
 import { photoshootToDTO, createPhotoshootDTOToPrisma } from "@/lib/mappers";
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/app/api/auth/[...nextauth]/route"
+import { requireAuth, requireRole } from "@/lib/auth";
 
 export async function GET() {
+  const session = await requireRole(["ADMIN"])
+  if (session instanceof NextResponse) return session
+
   try {
     const data = await prisma.photoshoot.findMany({
       orderBy: { id: 'asc' },
     });
     const photoshoots = data.map(photoshootToDTO);
-    
+
     return NextResponse.json(photoshoots, { status: 200 });
   } catch (error: any) {
     return NextResponse.json(
@@ -20,6 +26,9 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const session = await requireRole(["ADMIN"])
+  if (session instanceof NextResponse) return session
+
   try {
     const body = await request.json();
 
