@@ -6,7 +6,7 @@ import { requireRole } from "@/lib/auth";
 
 export async function GET(request: NextRequest,
   { params }: { params: { photoshootId: string, photoId: string } }) {
-  const session = await requireRole(["ADMIN", "USER"])
+  const session = await requireRole(request, ["ADMIN", "USER"])
   if (session instanceof NextResponse) return session
 
   try {
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest,
 
 export async function POST(request: NextRequest,
   { params }: { params: { photoshootId: string, photoId: string } }) {
-  const session = await requireRole(["ADMIN", "USER"])
+  const session = await requireRole(request, ["ADMIN", "USER"])
   if (session instanceof NextResponse) return session
 
   try {

@@ -8,7 +8,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { photoshootId: string, photoId: string } }
 ) {
-  const session = await requireRole(["ADMIN", "USER"])
+  const session = await requireRole(request, ["ADMIN", "USER"])
   if (session instanceof NextResponse) return session
 
   try {
@@ -53,7 +53,7 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: { photoshootId: string, photoId: string } }
 ) {
-  const session = await requireRole(["ADMIN"])
+  const session = await requireRole(request, ["ADMIN"])
   if (session instanceof NextResponse) return session
 
   try {
@@ -112,7 +112,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { photoshootId: string, photoId: string } }
 ) {
-  const session = await requireRole(["ADMIN"])
+  const session = await requireRole(request, ["ADMIN"])
   if (session instanceof NextResponse) return session
 
   try {

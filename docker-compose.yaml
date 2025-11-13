@@ -6,8 +6,24 @@ services:
       - "127.0.0.1:5430:5432"
     environment:
       POSTGRES_PASSWORD: mysecretpassword
+      POSTGRES_DB: photodb
     volumes:
-      - postgres-data:/var/lib/postgresql
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: photo_app
+    ports:
+      - "3001:3000"
+    environment:
+      DATABASE_URL: postgresql://postgres:mysecretpassword@database:5432/photodb
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+    depends_on:
+      - database
     restart: unless-stopped
 
 volumes:

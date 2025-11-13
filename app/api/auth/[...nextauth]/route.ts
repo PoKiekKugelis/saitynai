@@ -1,6 +1,7 @@
 import NextAuth, { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { prisma } from "@/lib/prisma"
+import { SignJWT, jwtVerify } from 'jose'
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -40,6 +41,42 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
     maxAge: 60 * 60,
+  },
+  jwt: {
+    async encode({ token, secret, maxAge }) {
+      if (!token) return "";
+
+      const now = Math.floor(Date.now() / 1000);
+      const expiry = now + (maxAge ?? 3600);
+
+      const cleanToken = Object.fromEntries(
+        Object.entries(token).filter(([_, v]) => v !== undefined)
+      );
+
+      const payload = {
+        ...cleanToken,
+        iat: (token.iat as number) ?? now,
+        exp: (token.exp as number) ?? expiry,
+      };
+
+      return await new SignJWT(payload)
+        .setProtectedHeader({ alg: "HS256", typ: "JWT" })
+        .sign(new TextEncoder().encode(secret as string));
+    },
+    async decode({ token, secret }) {
+      if (!token) return null;
+
+      try {
+        const { payload } = await jwtVerify(
+          token,
+          new TextEncoder().encode(secret as string),
+          { algorithms: ["HS256"] }
+        );
+        return payload as any;
+      } catch {
+        return null;
+      }
+    },
   },
   callbacks: {
     async jwt({ token, user }) {

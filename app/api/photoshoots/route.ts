@@ -2,12 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { CreatePhotoshootDTOZ } from "@/lib/dtos";
 import { photoshootToDTO, createPhotoshootDTOToPrisma } from "@/lib/mappers";
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"
-import { requireAuth, requireRole } from "@/lib/auth";
+import { requireRole } from "@/lib/auth";
 
-export async function GET() {
-  const session = await requireRole(["ADMIN"])
+export async function GET(request: NextRequest) {
+  const session = await requireRole(request, ["ADMIN"])
   if (session instanceof NextResponse) return session
 
   try {
@@ -26,7 +24,7 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const session = await requireRole(["ADMIN"])
+  const session = await requireRole(request, ["ADMIN"])
   if (session instanceof NextResponse) return session
 
   try {

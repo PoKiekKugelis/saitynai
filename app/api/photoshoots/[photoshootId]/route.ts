@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { UpdatePhotoshootDTOZ } from "@/lib/dtos";
 import { photoshootToDTO, updatePhotoshootDTOToPrisma } from "@/lib/mappers";
-import { requireAuth, requireRole } from "@/lib/auth";
+import { requireRole } from "@/lib/auth";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { photoshootId: string } }
 ) {
-  const session = await requireRole(["ADMIN", "USER"])
+  const session = await requireRole(request, ["ADMIN", "USER"])
   if (session instanceof NextResponse) return session
 
   try {
@@ -53,7 +53,7 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: { photoshootId: string } }
 ) {
-  const session = await requireRole(["ADMIN"])
+  const session = await requireRole(request, ["ADMIN"])
   if (session instanceof NextResponse) return session
 
   try {
@@ -115,7 +115,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { photoshootId: string } }
 ) {
-  const session = await requireRole(["ADMIN"])
+  const session = await requireRole(request, ["ADMIN"])
   if (session instanceof NextResponse) return session
 
   try {

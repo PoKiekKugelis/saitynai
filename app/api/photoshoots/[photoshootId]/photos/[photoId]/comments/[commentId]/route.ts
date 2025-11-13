@@ -3,13 +3,12 @@ import { prisma } from "@/lib/prisma";
 import { UpdateCommentDTOZ } from "@/lib/dtos";
 import { commentToDTO, updateCommentDTOToPrisma } from "@/lib/mappers";
 import { requireRole } from "@/lib/auth";
-import { error } from "console";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { photoshootId: string, photoId: string, commentId: string } }
 ) {
-  const session = await requireRole(["ADMIN", "USER"])
+  const session = await requireRole(request, ["ADMIN", "USER"])
   if (session instanceof NextResponse) return session
 
   try {
@@ -40,7 +39,7 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: { photoshootId: string, photoId: string, commentId: string } }
 ) {
-  const session = await requireRole(["ADMIN", "USER"])
+  const session = await requireRole(request, ["ADMIN", "USER"])
   if (session instanceof NextResponse) return session
 
   try {
@@ -94,7 +93,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { photoshootId: string, photoId: string, commentId: string } }
 ) {
-  const session = await requireRole(["ADMIN", "USER"])
+  const session = await requireRole(request, ["ADMIN", "USER"])
   if (session instanceof NextResponse) return session
 
   try {

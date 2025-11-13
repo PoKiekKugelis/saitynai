@@ -58,7 +58,7 @@ export interface CommentDTO {
 }
 
 export const CreateCommentDTOZ = z.object({
-  body: z.string().min(2).max(500),
+  body: z.string().min(2).max(500).trim(),
 });
 
 export type CreateCommentDTO = z.infer<typeof CreateCommentDTOZ>;
