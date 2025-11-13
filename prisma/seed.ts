@@ -63,13 +63,29 @@ async function main() {
     });
     console.log("Created comment:", comment);
   }
-  await prisma.user.createMany({
-    data: [
-      { email: 'admin@example.com', password: 'admin123', role: 'ADMIN' },
-      { email: 'user@example.com', password: 'user123', role: 'USER' },
-    ],
-  })
+  
+  // Step 4: Create users (idempotent)
+  await prisma.user.upsert({
+    where: { email: 'admin@example.com' },
+    update: {},
+    create: {
+      email: 'admin@example.com',
+      password: 'admin123',
+      role: 'ADMIN',
+    },
+  });
+  console.log("Created admin user");
 
+  await prisma.user.upsert({
+    where: { email: 'user@example.com' },
+    update: {},
+    create: {
+      email: 'user@example.com',
+      password: 'user123',
+      role: 'USER',
+    },
+  });
+  console.log("Created regular user");
 
   console.log("Seed completed successfully!");
 }
