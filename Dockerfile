@@ -43,8 +43,13 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+
+# Copy additional dependencies needed for seeding
 COPY --from=deps /app/node_modules/ts-node ./node_modules/ts-node
 COPY --from=deps /app/node_modules/typescript ./node_modules/typescript
+COPY --from=deps /app/node_modules/@types ./node_modules/@types
+COPY --from=deps /app/node_modules/@swc ./node_modules/@swc
+COPY --from=deps /app/node_modules/@cspotcode ./node_modules/@cspotcode
 
 USER nextjs
 
