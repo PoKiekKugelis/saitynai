@@ -4,7 +4,7 @@ import { CreatePhotoDTOZ } from "@/lib/dtos";
 import { photoToDTO, createPhotoDTOToPrisma } from "@/lib/mappers";
 import { requireRole } from "@/lib/auth";
 
-export async function GET(request: NextRequest, { params }: { params: { photoshootId: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ photoshootId: string }> }) {
   try {
     const session = await requireRole(request, ["ADMIN", "USER"])
     if (session instanceof NextResponse) return session
@@ -25,15 +25,15 @@ export async function GET(request: NextRequest, { params }: { params: { photosho
     const dtos = photos.map(photoToDTO);
 
     return NextResponse.json(dtos, { status: 200 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: "Failed to fetch photos", details: error.meta },
+      { error: "Failed to fetch photos", details: (error as { meta?: unknown })?.meta },
       { status: 400 }
     );
   }
 }
 
-export async function POST(request: NextRequest, { params }: { params: { photoshootId: string } }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ photoshootId: string }> }) {
   const session = await requireRole(request, ["ADMIN"])
   if (session instanceof NextResponse) return session
 
@@ -61,15 +61,15 @@ export async function POST(request: NextRequest, { params }: { params: { photosh
     });
 
     return NextResponse.json(photoToDTO(newPhoto), { status: 201 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: "Failed to create a photo", details: error.meta },
+      { error: "Failed to create a photo", details: (error as { meta?: unknown })?.meta },
       { status: 400 }
     );
   }
 }
 
-export async function ErrorCheck(id: number, session: any) {
+export async function ErrorCheck(id: number, session: { user: { id: string; role: string } }) {
   if (isNaN(id)) {
     return NextResponse.json(
       { error: "Invalid photoshoot ID" },

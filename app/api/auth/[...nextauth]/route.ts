@@ -2,6 +2,7 @@ import NextAuth, { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { prisma } from "@/lib/prisma"
 import { SignJWT, jwtVerify } from 'jose'
+import type { JWT } from "next-auth/jwt"
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -50,7 +51,7 @@ export const authOptions: NextAuthOptions = {
       const expiry = now + (maxAge ?? 3600);
 
       const cleanToken = Object.fromEntries(
-        Object.entries(token).filter(([_, v]) => v !== undefined)
+        Object.entries(token).filter(([, v]) => v !== undefined)
       );
 
       const payload = {
@@ -72,7 +73,7 @@ export const authOptions: NextAuthOptions = {
           new TextEncoder().encode(secret as string),
           { algorithms: ["HS256"] }
         );
-        return payload as any;
+        return payload as JWT;
       } catch {
         return null;
       }

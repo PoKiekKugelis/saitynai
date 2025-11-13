@@ -45,5 +45,5 @@ model User {
     id        Int     @id @default(autoincrement())
     email     String  @unique @db.VarChar(50)
     password  String  @db.VarChar(50)
-    role      Boolean @default(false)
+    role      String  @default("USER") @db.VarChar(20)
   }

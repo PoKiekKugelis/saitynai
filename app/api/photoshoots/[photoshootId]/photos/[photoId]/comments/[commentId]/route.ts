@@ -6,7 +6,7 @@ import { requireRole } from "@/lib/auth";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { photoshootId: string, photoId: string, commentId: string } }
+  { params }: { params: Promise<{ photoshootId: string, photoId: string, commentId: string }> }
 ) {
   const session = await requireRole(request, ["ADMIN", "USER"])
   if (session instanceof NextResponse) return session
@@ -17,7 +17,7 @@ export async function GET(
     const id = parseInt(commentId);
     const phsid = parseInt(photoshootId)
 
-    let commentError = await ErrorCheck(phid, id, phsid, session, "GET");
+    const commentError = await ErrorCheck(phid, id, phsid, session, "GET");
     if (commentError) {
       return commentError;
     }
@@ -27,9 +27,9 @@ export async function GET(
     });
 
     return NextResponse.json(commentToDTO(comment), { status: 200 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: "Failed to fetch comment", details: error.meta },
+      { error: "Failed to fetch comment", details: (error as { meta?: unknown })?.meta },
       { status: 400 }
     );
   }
@@ -37,7 +37,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { photoshootId: string, photoId: string, commentId: string } }
+  { params }: { params: Promise<{ photoshootId: string, photoId: string, commentId: string }> }
 ) {
   const session = await requireRole(request, ["ADMIN", "USER"])
   if (session instanceof NextResponse) return session
@@ -48,7 +48,7 @@ export async function PUT(
     const id = parseInt(commentId);
     const phsid = parseInt(photoshootId)
 
-    let commentError = await ErrorCheck(phid, id, phsid, session, "PUT");
+    const commentError = await ErrorCheck(phid, id, phsid, session, "PUT");
     if (commentError) {
       return commentError;
     }
@@ -81,9 +81,9 @@ export async function PUT(
     });
 
     return NextResponse.json(commentToDTO(updatedComment), { status: 200 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: "Failed to update comment", details: error.meta },
+      { error: "Failed to update comment", details: (error as { meta?: unknown })?.meta },
       { status: 400 }
     );
   }
@@ -91,7 +91,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { photoshootId: string, photoId: string, commentId: string } }
+  { params }: { params: Promise<{ photoshootId: string, photoId: string, commentId: string }> }
 ) {
   const session = await requireRole(request, ["ADMIN", "USER"])
   if (session instanceof NextResponse) return session
@@ -102,7 +102,7 @@ export async function DELETE(
     const id = parseInt(commentId);
     const phsid = parseInt(photoshootId)
 
-    let commentError = await ErrorCheck(phid, id, phsid, session, "DELETE");
+    const commentError = await ErrorCheck(phid, id, phsid, session, "DELETE");
     if (commentError) {
       return commentError;
     }
@@ -115,20 +115,20 @@ export async function DELETE(
       { message: "Comment deleted successfully" },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: "Failed to delete comment", details: error.meta },
+      { error: "Failed to delete comment", details: (error as { meta?: unknown })?.meta },
       { status: 400 }
     );
   }
 }
 
-export async function ErrorCheck(phid: number, cid: number, phsid: number, session: any, CASE: string) {
+export async function ErrorCheck(phid: number, cid: number, phsid: number, session: { user: { id: string; role: string } }, _CASE: string) {
   const photoshoot = await prisma.photoshoot.findUnique({
     where: { id: phsid }
   });
 
-  if (photoshoot?.ownerId != session.user.id && session.user.role != "ADMIN") {
+  if (photoshoot?.ownerId != parseInt(session.user.id) && session.user.role != "ADMIN") {
     return NextResponse.json(
       { error: "Forbidden - no permissions" },
       { status: 403 }

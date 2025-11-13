@@ -6,7 +6,7 @@ import { requireRole } from "@/lib/auth";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { photoshootId: string, photoId: string } }
+  { params }: { params: Promise<{ photoshootId: string, photoId: string }> }
 ) {
   const session = await requireRole(request, ["ADMIN", "USER"])
   if (session instanceof NextResponse) return session
@@ -40,10 +40,10 @@ export async function GET(
     }
 
     return NextResponse.json(photoToDTO(photo), { status: 200 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error fetching photo:", error);
     return NextResponse.json(
-      { error: "Failed to fetch photo", details: error.meta },
+      { error: "Failed to fetch photo", details: (error as { meta?: unknown })?.meta },
       { status: 400 }
     );
   }
@@ -51,7 +51,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { photoshootId: string, photoId: string } }
+  { params }: { params: Promise<{ photoshootId: string, photoId: string }> }
 ) {
   const session = await requireRole(request, ["ADMIN"])
   if (session instanceof NextResponse) return session
@@ -100,9 +100,9 @@ export async function PUT(
     });
 
     return NextResponse.json(photoToDTO(updatedPhoto), { status: 200 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: "Failed to update photo", details: error.meta },
+      { error: "Failed to update photo", details: (error as { meta?: unknown })?.meta },
       { status: 400 }
     );
   }
@@ -110,7 +110,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { photoshootId: string, photoId: string } }
+  { params }: { params: Promise<{ photoshootId: string, photoId: string }> }
 ) {
   const session = await requireRole(request, ["ADMIN"])
   if (session instanceof NextResponse) return session
@@ -151,15 +151,15 @@ export async function DELETE(
       { message: "Photo deleted successfully" },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: "Failed to delete photo", details: error.meta },
+      { error: "Failed to delete photo", details: (error as { meta?: unknown })?.meta },
       { status: 400 }
     );
   }
 }
 
-async function PhotoShootErrorCheck(id: number, session: any) {
+async function PhotoShootErrorCheck(id: number, session: { user: { id: string; role: string } }) {
   if (isNaN(id)) {
     return NextResponse.json(
       { error: "Invalid photoshoot ID" },
@@ -178,7 +178,7 @@ async function PhotoShootErrorCheck(id: number, session: any) {
     );
   }
 
-  if (photoshoot.ownerId != session.user.id && session.user.role != "ADMIN") {
+  if (photoshoot.ownerId != parseInt(session.user.id) && session.user.role != "ADMIN") {
     return NextResponse.json(
       { error: "Forbidden - no permissions" },
       { status: 403 }

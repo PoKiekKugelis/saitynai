@@ -15,9 +15,9 @@ export async function GET(request: NextRequest) {
     const photoshoots = data.map(photoshootToDTO);
 
     return NextResponse.json(photoshoots, { status: 200 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: "Failed to fetch photoshoots", details: error.meta },
+      { error: "Failed to fetch photoshoots", details: (error as { meta?: unknown })?.meta },
       { status: 400 }
     );
   }
@@ -44,9 +44,9 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(photoshootToDTO(newPhotoshoot), { status: 201 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: "Failed to create photoshoot", details: error.meta },
+      { error: "Failed to create photoshoot", details: (error as { meta?: unknown })?.meta },
       { status: 400 }
     );
   }

@@ -6,7 +6,7 @@ import { requireRole } from "@/lib/auth";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { photoshootId: string } }
+  { params }: { params: Promise<{ photoshootId: string }> }
 ) {
   const session = await requireRole(request, ["ADMIN", "USER"])
   if (session instanceof NextResponse) return session
@@ -41,7 +41,7 @@ export async function GET(
     }
 
     return NextResponse.json(photoshootToDTO(photoshoot), { status: 200 });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to fetch photoshoot" },
       { status: 500 }
@@ -51,7 +51,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { photoshootId: string } }
+  { params }: { params: Promise<{ photoshootId: string }> }
 ) {
   const session = await requireRole(request, ["ADMIN"])
   if (session instanceof NextResponse) return session
@@ -103,9 +103,9 @@ export async function PUT(
     });
 
     return NextResponse.json(photoshootToDTO(updatedPhotoshoot), { status: 200 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: "Failed to update photoshoot", details: error.meta },
+      { error: "Failed to update photoshoot", details: (error as { meta?: unknown })?.meta },
       { status: 400 }
     );
   }
@@ -113,7 +113,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { photoshootId: string } }
+  { params }: { params: Promise<{ photoshootId: string }> }
 ) {
   const session = await requireRole(request, ["ADMIN"])
   if (session instanceof NextResponse) return session
@@ -148,9 +148,9 @@ export async function DELETE(
       { message: "Photoshoot deleted successfully" },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: "Failed to delete photoshoot", details: error.meta },
+      { error: "Failed to delete photoshoot", details: (error as { meta?: unknown })?.meta },
       { status: 400 }
     );
   }

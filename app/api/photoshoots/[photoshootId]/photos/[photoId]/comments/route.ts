@@ -5,7 +5,7 @@ import { commentToDTO, createCommentDTOToPrisma } from "@/lib/mappers";
 import { requireRole } from "@/lib/auth";
 
 export async function GET(request: NextRequest,
-  { params }: { params: { photoshootId: string, photoId: string } }) {
+  { params }: { params: Promise<{ photoshootId: string, photoId: string }> }) {
   const session = await requireRole(request, ["ADMIN", "USER"])
   if (session instanceof NextResponse) return session
 
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest,
     const phid = parseInt(photoId);
     const phsid = parseInt(photoshootId);
 
-    let errorResponse = await ErrorCheck(phid, phsid, session);
+    const errorResponse = await ErrorCheck(phid, phsid, session);
     if (errorResponse) {
       return errorResponse;
     }
@@ -27,16 +27,16 @@ export async function GET(request: NextRequest,
     const dtos = comments.map(commentToDTO);
 
     return NextResponse.json(dtos, { status: 200 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: "Failed to fetch comments", details: error.meta },
+      { error: "Failed to fetch comments", details: (error as { meta?: unknown })?.meta },
       { status: 400 }
     );
   }
 }
 
 export async function POST(request: NextRequest,
-  { params }: { params: { photoshootId: string, photoId: string } }) {
+  { params }: { params: Promise<{ photoshootId: string, photoId: string }> }) {
   const session = await requireRole(request, ["ADMIN", "USER"])
   if (session instanceof NextResponse) return session
 
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest,
     const phd = parseInt(photoId);
     const phsid = parseInt(photoshootId);
 
-    let errorResponse = await ErrorCheck(phd, phsid, session);
+    const errorResponse = await ErrorCheck(phd, phsid, session);
     if (errorResponse) {
       return errorResponse;
     }
@@ -66,20 +66,20 @@ export async function POST(request: NextRequest,
     });
 
     return NextResponse.json(commentToDTO(newComment), { status: 201 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: "Failed to create comment", details: error.meta },
+      { error: "Failed to create comment", details: (error as { meta?: unknown })?.meta },
       { status: 400 }
     );
   }
 }
 
-export async function ErrorCheck(phid: number, phsid: number, session: any) {
+export async function ErrorCheck(phid: number, phsid: number, session: { user: { id: string; role: string } }) {
   const photoshoot = await prisma.photoshoot.findUnique({
     where: { id: phsid }
   });
 
-  if (photoshoot?.ownerId != session.user.id && session.user.role != "ADMIN") {
+  if (photoshoot?.ownerId != parseInt(session.user.id) && session.user.role != "ADMIN") {
     return NextResponse.json(
       { error: "Forbidden - no permissions" },
       { status: 403 }

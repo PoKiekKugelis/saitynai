@@ -10,8 +10,6 @@ import {
   UpdatePhotoDTO,
   UpdateCommentDTO
 } from './dtos';
-import { promises } from 'dns';
-import { Session } from 'inspector';
 
 export function photoshootToDTO(ps: Photoshoot): PhotoshootDTO {
   return {
@@ -54,7 +52,7 @@ export function createPhotoshootDTOToPrisma(dto: CreatePhotoshootDTO) {
 }
 
 export function updatePhotoshootDTOToPrisma(dto: UpdatePhotoshootDTO) {
-  const updateData: any = {};
+  const updateData: Record<string, string | Date | number | null> = {};
 
   if (dto.title !== undefined) updateData.title = dto.title;
   if (dto.description !== undefined) updateData.description = dto.description;
@@ -73,7 +71,7 @@ export function createPhotoDTOToPrisma(dto: CreatePhotoDTO, photoshootId: string
 }
 
 export function updatePhotoDTOToPrisma(dto: UpdatePhotoDTO) {
-  const updateData: any = {};
+  const updateData: Record<string, string | null> = {};
 
   if (dto.filename !== undefined) updateData.filename = dto.filename;
   if (dto.caption !== undefined) updateData.caption = dto.caption;
