@@ -11,20 +11,20 @@ services:
       - postgres-data:/var/lib/postgresql
     restart: unless-stopped
 
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: photo_app
-    ports:
-      - "0.0.0.0:3001:3000"
-    environment:
-      DATABASE_URL: postgresql://postgres:mysecretpassword@database:5432/photodb
-      NEXTAUTH_URL: http://129.151.213.227:3001
-      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
-    depends_on:
-      - database
-    restart: unless-stopped
+  # app:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: photo_app
+  #   ports:
+  #     - "0.0.0.0:3001:3000"
+  #   environment:
+  #     DATABASE_URL: postgresql://postgres:mysecretpassword@database:5432/photodb
+  #     NEXTAUTH_URL: http://129.151.213.227:3001
+  #     NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+  #   depends_on:
+  #     - database
+  #   restart: unless-stopped
 
 volumes:
   postgres-data: {}
