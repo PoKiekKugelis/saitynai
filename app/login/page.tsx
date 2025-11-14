@@ -1,13 +1,14 @@
 "use client";
 
 import { signIn, useSession } from "next-auth/react";
-import { FormEvent, useState } from "react";
+import { FormEvent, useState, useEffect } from "react";
 
 export default function LoginPage() {
-  const { data: session } = useSession();
+  const { data: session, update } = useSession();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [token, setToken] = useState("");
+
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -27,7 +28,7 @@ export default function LoginPage() {
     } else if (result?.ok) {
       const res = await fetch('/api/token');
       const data = await res.json();
-      setToken(data.sessionToken);
+      setToken(data.accessToken);
       setLoading(false);
       setError("")
     }

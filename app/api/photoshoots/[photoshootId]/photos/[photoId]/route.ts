@@ -29,7 +29,7 @@ export async function GET(
     }
 
     const photo = await prisma.photo.findUnique({
-      where: { id },
+      where: { id: id, photoshootId: psId },
     });
 
     if (!photo) {

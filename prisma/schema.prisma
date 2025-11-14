@@ -46,4 +46,6 @@ model User {
     email     String  @unique @db.VarChar(50)
     password  String  @db.VarChar(50)
     role      String  @default("USER") @db.VarChar(20)
+    refreshToken       String?   @unique
+    refreshTokenExpiration DateTime?
   }

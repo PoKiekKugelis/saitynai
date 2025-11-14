@@ -3,6 +3,8 @@ import CredentialsProvider from "next-auth/providers/credentials"
 import { prisma } from "@/lib/prisma"
 import { SignJWT, jwtVerify } from 'jose'
 import type { JWT } from "next-auth/jwt"
+import crypto from 'crypto'
+import { cookies } from "next/headers";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -31,27 +33,38 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Invalid credentials")
         }
 
+        const refreshToken = crypto.randomBytes(32).toString('hex');
+        const refreshTokenExpiration = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            refreshToken,
+            refreshTokenExpiration
+          }
+        });
         return {
           id: user.id.toString(),
           email: user.email,
-          role: user.role
+          role: user.role,
+          refreshToken,
         }
       },
     }),
   ],
   session: {
     strategy: "jwt",
-    maxAge: 60 * 60,
+    maxAge: 15 * 60,
   },
   jwt: {
     async encode({ token, secret, maxAge }) {
       if (!token) return "";
 
       const now = Math.floor(Date.now() / 1000);
-      const expiry = now + (maxAge ?? 3600);
+      const expiry = now + (maxAge ?? 60);
 
       const cleanToken = Object.fromEntries(
-        Object.entries(token).filter(([, v]) => v !== undefined)
+        Object.entries(token).filter(([key, v]) => key !== 'refreshToken' && v !== undefined)
       );
 
       const payload = {
@@ -84,6 +97,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id
         token.role = user.role
+        token.refreshToken = user.refreshToken
       }
       return token
     },
@@ -91,8 +105,22 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.id as string
         session.user.role = token.role as string
+        session.refreshToken = token.refreshToken
       }
       return session
+    }
+  },
+  events: {
+    async signIn({ user }) {
+      if (user.refreshToken) {
+        (await cookies()).set('refreshToken', user.refreshToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          maxAge: 60 * 60 * 24 * 7,
+          path: '/'
+        });
+      }
     }
   },
   secret: process.env.NEXTAUTH_SECRET,
