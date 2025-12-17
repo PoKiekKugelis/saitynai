@@ -13,6 +13,8 @@ model Photoshoot {
   description String?
   date        DateTime?
   ownerId     Int?
+  public      Boolean   @default(false)
+  sharedWith  Int[]     @default([])
   photos      Photo[]
   created_at  DateTime  @default(now())
   updated_at  DateTime  @updatedAt
@@ -44,7 +46,9 @@ model Comment {
 model User {
     id        Int     @id @default(autoincrement())
     email     String  @unique @db.VarChar(50)
+    username  String @unique @db.VarChar(50)
     password  String  @db.VarChar(50)
+    phoneNumber String @db.VarChar(20)
     role      String  @default("USER") @db.VarChar(20)
     refreshToken       String?   @unique
     refreshTokenExpiration DateTime?

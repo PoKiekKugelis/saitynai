@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     const photoId = formData.get("photoId") as string;
     const photoshootId = formData.get("photoshootId") as string;
     
-    const session = await requireRole(request, ["ADMIN"])
+    const session = await requireRole(request, ["ADMIN", "USER"])
     if (session instanceof Response) return session
 
     if (!file || !photoId || !photoshootId) {

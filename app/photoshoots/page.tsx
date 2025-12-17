@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Modal from '../components/Modal'
 
@@ -13,6 +13,8 @@ interface Photoshoot {
   location: string
   date: string
   ownerId: number | null
+  public: boolean
+  sharedWith: number[]
   createdAt: string
   updatedAt: string
 }
@@ -20,33 +22,48 @@ interface Photoshoot {
 export default function PhotoshootsPage() {
   const { data: session } = useSession()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const view = searchParams.get('view') || 'public' // 'public' or 'my'
+  
   const [photoshoots, setPhotoshoots] = useState<Photoshoot[]>([])
+  const [sharedPhotoshoots, setSharedPhotoshoots] = useState<Photoshoot[]>([])
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
-  const [filterByOwner, setFilterByOwner] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    date: '',
-    ownerId: ''
+    date: ''
   })
 
   useEffect(() => {
     fetchPhotoshoots()
-  }, [filterByOwner])
+  }, [view, session])
 
   const fetchPhotoshoots = async () => {
+    setLoading(true)
     try {
       let url = '/api/photoshoots'
-      if (filterByOwner && session?.user?.id) {
+      if (view === 'public') {
+        url += '?public=true'
+        const response = await fetch(url)
+        if (response.ok) {
+          const data = await response.json()
+          setPhotoshoots(data)
+          setSharedPhotoshoots([])
+        }
+      } else if (view === 'my' && session?.user?.id) {
         url += `?ownerId=${session.user.id}`
-      }else if (session?.user?.role !== 'ADMIN'){
-        url += `?ownerId=${1}`
-      }
-      const response = await fetch(url)
-      if (response.ok) {
-        const data = await response.json()
-        setPhotoshoots(data)
+        const response = await fetch(url)
+        if (response.ok) {
+          const data = await response.json()
+          const userId = parseInt(session.user.id)
+          // Separate owned and shared
+          const owned = data.filter((p: Photoshoot) => p.ownerId === userId)
+          const shared = data.filter((p: Photoshoot) => p.ownerId !== userId)
+          setPhotoshoots(owned)
+          setSharedPhotoshoots(shared)
+        }
       }
     } catch (error) {
       console.error('Failed to fetch photoshoots:', error)
@@ -77,7 +94,7 @@ export default function PhotoshootsPage() {
 
       if (response.ok) {
         setModalOpen(false)
-        setFormData({ title: '', description: '', date: '', ownerId: ''})
+        setFormData({ title: '', description: '', date: ''})
         fetchPhotoshoots()
       }
     } catch (error) {
@@ -113,208 +130,235 @@ export default function PhotoshootsPage() {
     )
   }
 
+  const allPhotoshoots = [...photoshoots, ...sharedPhotoshoots]
+    .filter(photoshoot => {
+      if (searchQuery) {
+        return photoshoot.title.toLowerCase().includes(searchQuery.toLowerCase())
+      }
+      return true
+    })
+
   return (
-    <div>
-      {/* Header */}
+    <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+      {/* Minimalist Header */}
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: '2rem',
-        flexWrap: 'wrap',
-        gap: '1rem'
+        paddingBottom: '1rem',
+        borderBottom: '1px solid var(--border)',
+        transition: 'none'
       }}>
-        <div>
-          <h1 style={{
-            fontSize: 'clamp(2rem, 4vw, 3rem)',
-            marginBottom: '0.5rem',
-            color: 'var(--foreground)'
-          }}>
-            Photoshoots
-          </h1>
-          <p style={{ color: '#64748b', fontSize: '1.125rem' }}>
-            Browse and manage your photoshoots
-          </p>
-        </div>
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          {session && (
-            <>
-              <button
-                onClick={() => setFilterByOwner(!filterByOwner)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  background: filterByOwner ? 'var(--accent)' : 'white',
-                  color: filterByOwner ? 'white' : 'var(--foreground)',
-                  border: `2px solid ${filterByOwner ? 'var(--accent)' : 'var(--border)'}`,
-                  padding: '0.875rem 1.5rem',
-                  borderRadius: '0.5rem',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  fontSize: '1rem'
-                }}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M22 3h-6l-2 3h-4L8 3H2v18h20V3z"/>
-                  <circle cx="12" cy="13" r="4"/>
-                </svg>
-                {filterByOwner ? 'My Photoshoots' : 'Public Photoshoots'}
-              </button>
-              <button
-                onClick={() => setModalOpen(true)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  background: 'var(--primary)',
-                  color: 'white',
-                  border: 'none',
-                  padding: '0.875rem 1.5rem',
-                  borderRadius: '0.5rem',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  fontSize: '1rem'
-                }}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="12" y1="5" x2="12" y2="19"/>
-                  <line x1="5" y1="12" x2="19" y2="12"/>
-                </svg>
-                Create Photoshoot
-              </button>
-            </>
-          )}
-        </div>
+        <h1 style={{
+          fontSize: '1.5rem',
+          fontWeight: '600',
+          color: 'var(--foreground)',
+          margin: 0,
+          transition: 'none'
+        }}>
+          Fotosesijos
+        </h1>
+        
+        {session && view === 'my' && (
+          <button
+            onClick={() => setModalOpen(true)}
+            style={{
+              background: '#1e293b',
+              color: 'white',
+              border: 'none',
+              padding: '0.5rem 1rem',
+              borderRadius: '0.375rem',
+              fontWeight: '500',
+              cursor: 'pointer',
+              fontSize: '0.875rem'
+            }}
+          >
+            + Sukurti
+          </button>
+        )}
       </div>
 
-      {/* Photoshoots Grid */}
-      {photoshoots.length === 0 ? (
+      {/* View Toggle & Search */}
+      <div style={{
+        display: 'flex',
+        gap: '1rem',
+        marginBottom: '2rem',
+        alignItems: 'center',
+        flexWrap: 'wrap'
+      }}>
+        <div style={{
+          display: 'inline-flex',
+          gap: '0.5rem',
+          padding: '0.25rem',
+          background: 'var(--card-bg)',
+          borderRadius: '0.5rem',
+          border: '1px solid var(--border)'
+        }}>
+          <button
+            onClick={() => router.push('/photoshoots?view=public')}
+            style={{
+              padding: '0.5rem 1rem',
+              background: view === 'public' ? '#1e293b' : 'transparent',
+              color: view === 'public' ? 'white' : 'var(--foreground)',
+              border: 'none',
+              borderRadius: '0.375rem',
+              cursor: 'pointer',
+              fontWeight: '500',
+              fontSize: '0.875rem'
+            }}
+          >
+            Viešos
+          </button>
+          {session && (
+            <button
+              onClick={() => router.push('/photoshoots?view=my')}
+              style={{
+                padding: '0.5rem 1rem',
+                background: view === 'my' ? '#1e293b' : 'transparent',
+                color: view === 'my' ? 'white' : 'var(--foreground)',
+                border: 'none',
+                borderRadius: '0.375rem',
+                cursor: 'pointer',
+                fontWeight: '500',
+                fontSize: '0.875rem'
+              }}
+            >
+              Mano
+            </button>
+          )}
+        </div>
+
+        <input
+          type="text"
+          placeholder="Ieškoti..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={{
+            flex: 1,
+            minWidth: '200px',
+            padding: '0.5rem 0.75rem',
+            border: '1px solid var(--border)',
+            borderRadius: '0.375rem',
+            fontSize: '0.875rem',
+            background: 'var(--card-bg)'
+          }}
+        />
+      </div>
+
+      {/* Minimalist Photoshoot List */}
+      {allPhotoshoots.length === 0 ? (
         <div style={{
           textAlign: 'center',
-          padding: '4rem 2rem',
-          background: 'var(--card-bg)',
-          borderRadius: '1rem',
-          border: '2px dashed var(--border)'
+          padding: '3rem 2rem',
+          color: '#64748b'
         }}>
-          <svg
-            width="64"
-            height="64"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#cbd5e1"
-            strokeWidth="2"
-            style={{ margin: '0 auto 1rem' }}
-          >
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-            <circle cx="8.5" cy="8.5" r="1.5"/>
-            <polyline points="21 15 16 10 5 21"/>
-          </svg>
-          <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: 'var(--foreground)' }}>
-            No photoshoots yet
-          </h3>
-          <p style={{ color: '#64748b', marginBottom: '1.5rem' }}>
-            Create your first photoshoot to get started
-          </p>
-          {session && (
+          <p>Fotosesijų nerasta</p>
+          {session && view === 'my' && (
             <button
               onClick={() => setModalOpen(true)}
               style={{
-                background: 'var(--primary)',
+                marginTop: '1rem',
+                background: '#1e293b',
                 color: 'white',
                 border: 'none',
-                padding: '0.75rem 1.5rem',
-                borderRadius: '0.5rem',
-                fontWeight: '600',
-                cursor: 'pointer'
+                padding: '0.5rem 1rem',
+                borderRadius: '0.375rem',
+                fontWeight: '500',
+                cursor: 'pointer',
+                fontSize: '0.875rem'
               }}
             >
-              Create Photoshoot
+              + Sukurti fotosesiją
             </button>
           )}
         </div>
       ) : (
-        <div className="grid-container">
-          {photoshoots.map((photoshoot) => (
-            <Link
-              key={photoshoot.id}
-              href={`/photoshoots/${photoshoot.id}`}
-              style={{ textDecoration: 'none', color: 'inherit' }}
-            >
-              <div className="card" style={{
-                background: 'var(--card-bg)',
-                borderRadius: '1rem',
-                overflow: 'hidden',
-                border: '1px solid var(--border)',
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column'
-              }}>
-                {/* Image Placeholder */}
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.5rem'
+        }}>
+          {allPhotoshoots.map((photoshoot) => {
+            const isShared = view === 'my' && sharedPhotoshoots.some(s => s.id === photoshoot.id)
+            
+            return (
+              <Link
+                key={photoshoot.id}
+                href={`/photoshoots/${photoshoot.id}`}
+                style={{
+                  textDecoration: 'none',
+                  color: 'inherit',
+                  display: 'block',
+                  padding: '1rem',
+                  background: 'var(--card-bg)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '0.375rem'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--primary)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--border)'
+                }}
+              >
                 <div style={{
-                  background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)',
-                  height: '200px',
                   display: 'flex',
+                  justifyContent: 'space-between',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  position: 'relative'
+                  gap: '1rem',
+                  flexWrap: 'wrap'
                 }}>
-                  <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                    <circle cx="8.5" cy="8.5" r="1.5"/>
-                    <polyline points="21 15 16 10 5 21"/>
-                  </svg>
-                  
-                </div>
-
-                {/* Content */}
-                <div style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                  <h3 style={{
-                    fontSize: '1.5rem',
-                    marginBottom: '0.5rem',
-                    color: 'var(--foreground)',
-                    fontWeight: '700'
-                  }}>
-                    {photoshoot.title}
-                  </h3>
-                  <p style={{
-                    color: '#64748b',
-                    marginBottom: '1rem',
-                    lineHeight: '1.6',
-                    flex: 1
-                  }}>
-                    {photoshoot.description}
-                  </p>
-
-                  {/* Meta Info */}
-                  <div style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '0.5rem',
-                    fontSize: '0.875rem',
-                    color: '#64748b'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                        <circle cx="12" cy="10" r="3"/>
-                      </svg>
-                      {photoshoot.location}
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                        <line x1="16" y1="2" x2="16" y2="6"/>
-                        <line x1="8" y1="2" x2="8" y2="6"/>
-                        <line x1="3" y1="10" x2="21" y2="10"/>
-                      </svg>
-                      {formatDate(photoshoot.date)}
+                  <div style={{ flex: 1, minWidth: '200px' }}>
+                    <h3 style={{
+                      fontSize: '1.125rem',
+                      fontWeight: '600',
+                      color: 'var(--foreground)',
+                      marginBottom: '0.25rem'
+                    }}>
+                      {photoshoot.title}
+                      {isShared && (
+                        <span style={{
+                          marginLeft: '0.5rem',
+                          fontSize: '0.75rem',
+                          color: '#10b981',
+                          fontWeight: '500'
+                        }}>
+                          • Bendrinama
+                        </span>
+                      )}
+                    </h3>
+                    <div style={{
+                      fontSize: '0.875rem',
+                      color: '#64748b',
+                      display: 'flex',
+                      gap: '1rem',
+                      flexWrap: 'wrap'
+                    }}>
+                      <span>{new Date(photoshoot.date).toLocaleDateString('lt-LT', { year: 'numeric', month: '2-digit', day: '2-digit' })}</span>
+                      {photoshoot.location && (
+                        <>
+                          <span>•</span>
+                          <span>{photoshoot.location}</span>
+                        </>
+                      )}
                     </div>
                   </div>
+                  {photoshoot.public && (
+                    <div style={{
+                      fontSize: '0.75rem',
+                      color: '#64748b',
+                      padding: '0.25rem 0.5rem',
+                      background: '#f1f5f9',
+                      borderRadius: '0.25rem'
+                    }}>
+                      Vieša
+                    </div>
+                  )}
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            )
+          })}
         </div>
       )}
 
@@ -322,7 +366,7 @@ export default function PhotoshootsPage() {
       <Modal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        title="Create New Photoshoot"
+        title="Sukurti naują fotosesiją"
       >
         <form onSubmit={handleSubmit} style={{
           display: 'flex',
@@ -338,7 +382,7 @@ export default function PhotoshootsPage() {
               fontWeight: '600',
               color: 'var(--foreground)'
             }}>
-              Title *
+              Pavadinimas *
             </label>
             <input
               type="text"
@@ -355,7 +399,7 @@ export default function PhotoshootsPage() {
                 fontSize: '1rem',
                 fontFamily: 'inherit'
               }}
-              placeholder="Enter photoshoot title"
+              placeholder="Įveskite fotosesijos pavadinimą"
             />
           </div>
 
@@ -366,7 +410,7 @@ export default function PhotoshootsPage() {
               fontWeight: '600',
               color: 'var(--foreground)'
             }}>
-              Description
+              Aprašymas
             </label>
             <textarea
               value={formData.description}
@@ -383,7 +427,7 @@ export default function PhotoshootsPage() {
                 fontFamily: 'inherit',
                 resize: 'vertical'
               }}
-              placeholder="Describe your photoshoot"
+              placeholder="Aprašykite savo fotosesiją"
             />
           </div>
 
@@ -394,7 +438,7 @@ export default function PhotoshootsPage() {
               fontWeight: '600',
               color: 'var(--foreground)'
             }}>
-              Date *
+              Data *
             </label>
             <input
               type="date"
@@ -432,21 +476,21 @@ export default function PhotoshootsPage() {
                 color: 'var(--foreground)'
               }}
             >
-              Cancel
+              Atšaukti
             </button>
             <button
               type="submit"
               style={{
                 padding: '0.75rem 1.5rem',
                 border: 'none',
-                background: 'var(--primary)',
+                background: '#1e293b',
                 color: 'white',
                 borderRadius: '0.5rem',
                 fontWeight: '600',
                 cursor: 'pointer'
               }}
             >
-              Create Photoshoot
+              Sukurti
             </button>
           </div>
         </form>

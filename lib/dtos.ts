@@ -6,6 +6,8 @@ export interface PhotoshootDTO {
   description?: string | null;
   date?: string | null;
   ownerId?: number | null;
+  public: boolean;
+  sharedWith: number[];
   createdAt: string;
   updatedAt: string;
 }
@@ -15,6 +17,8 @@ export const CreatePhotoshootDTOZ = z.object({
   description: z.string().optional().nullable(),
   date: z.string().datetime().optional().nullable(),
   ownerId: z.number().int().positive().optional().nullable(),
+  public: z.boolean().optional().default(false),
+  sharedWith: z.array(z.number().int().positive()).optional().default([]),
 });
 
 export type CreatePhotoshootDTO = z.infer<typeof CreatePhotoshootDTOZ>;
@@ -24,6 +28,8 @@ export const UpdatePhotoshootDTOZ = z.object({
   description: z.string().optional().nullable(),
   date: z.string().datetime().optional().nullable(),
   ownerId: z.number().int().positive().optional().nullable(),
+  public: z.boolean().optional(),
+  sharedWith: z.array(z.number().int().positive()).optional(),
 });
 
 export type UpdatePhotoshootDTO = z.infer<typeof UpdatePhotoshootDTOZ>;
@@ -55,6 +61,7 @@ export interface CommentDTO {
   photoId: number;
   authorId: number;
   body: string;
+  authorUsername?: string;
 }
 
 export const CreateCommentDTOZ = z.object({
@@ -64,21 +71,24 @@ export const CreateCommentDTOZ = z.object({
 export type CreateCommentDTO = z.infer<typeof CreateCommentDTOZ>;
 
 export const UpdateCommentDTOZ = z.object({
-  body: z.string().min(2).max(500),
+  body: z.string().min(2).max(500).trim(),
 });
 
 export type UpdateCommentDTO = z.infer<typeof UpdateCommentDTOZ>;
 
 export const CreateUserDTOZ = z.object({
   email: z.email().max(50).trim(),
-  password: z.string().min(4).max(30).trim()
+  password: z.string().min(4).max(30).trim(),
+  phoneNumber: z.string().max(20).trim(),
+  username: z.string().min(3).max(50).trim(),
 });
 
 export const UpdateUserDTOZ = z.object({
-  email: z.email().max(50).trim(),
-  password: z.string().min(4).max(30).trim(),
+  email: z.email().max(50).trim().optional(),
+  password: z.string().min(4).max(30).trim().optional(),
+  phoneNumber: z.string().max(20).trim().optional(),
 });
 
-export type CreateUserDTO = z.infer<typeof CreatePhotoshootDTOZ>;
-export type UpdateUserDTO = z.infer<typeof UpdatePhotoshootDTOZ>;
+export type CreateUserDTO = z.infer<typeof CreateUserDTOZ>;
+export type UpdateUserDTO = z.infer<typeof UpdateUserDTOZ>;
 

@@ -16,7 +16,7 @@ export async function GET(
     const id = parseInt(photoId);
     const psId = parseInt(photoshootId);
 
-    const errorResponse = await PhotoShootErrorCheck(psId, session);
+    const errorResponse = await PhotoShootViewCheck(psId, session);
     if (errorResponse) {
       return errorResponse;
     }
@@ -53,7 +53,7 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ photoshootId: string, photoId: string }> }
 ) {
-  const session = await requireRole(request, ["ADMIN"])
+  const session = await requireRole(request, ["ADMIN", "USER"])
   if (session instanceof NextResponse) return session
 
   try {
@@ -114,7 +114,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ photoshootId: string, photoId: string }> }
 ) {
-  const session = await requireRole(request, ["ADMIN"])
+  const session = await requireRole(request, ["ADMIN", "USER"])
   if (session instanceof NextResponse) return session
 
   try {
@@ -180,7 +180,42 @@ async function PhotoShootErrorCheck(id: number, session: { user: { id: string; r
     );
   }
 
+  // Only owner or admin can modify (PUT/DELETE)
   if (photoshoot.ownerId != parseInt(session.user.id) && session.user.role != "ADMIN") {
+    return NextResponse.json(
+      { error: "Forbidden - only owner can modify photos" },
+      { status: 403 }
+    )
+  }
+}
+
+async function PhotoShootViewCheck(id: number, session: { user: { id: string; role: string } }) {
+  if (isNaN(id)) {
+    return NextResponse.json(
+      { error: "Invalid photoshoot ID" },
+      { status: 400 }
+    );
+  }
+
+  const photoshoot = await prisma.photoshoot.findUnique({
+    where: { id }
+  });
+
+  if (!photoshoot) {
+    return NextResponse.json(
+      { error: "photoshoot not found" },
+      { status: 404 }
+    );
+  }
+
+  // Check if user has view access (owner, shared, public, or admin)
+  const userId = parseInt(session.user.id);
+  const isOwner = photoshoot.ownerId === userId;
+  const isShared = photoshoot.sharedWith.includes(userId);
+  const isPublic = photoshoot.public;
+  const isAdmin = session.user.role === "ADMIN";
+
+  if (!isOwner && !isShared && !isPublic && !isAdmin) {
     return NextResponse.json(
       { error: "Forbidden - no permissions" },
       { status: 403 }

@@ -11,7 +11,7 @@
   --border: #e2e8f0;
   --header-bg: #1e293b;
   --footer-bg: #0f172a;
-  --transition: all 0.3s ease;
+  --transition: all 0.2s ease;
 }
 
 body {
@@ -45,7 +45,6 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Button base styles */
 button, .btn {
-  transition: var(--transition);
   cursor: pointer;
 }
 

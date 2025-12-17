@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import Modal from '../../components/Modal'
+import Modal from '../../components/Modal' 
 
 interface Photo {
   id: number
@@ -19,6 +19,13 @@ interface Comment {
   body: string
   authorId: number
   photoId: number
+  authorUsername?: string
+}
+
+interface User {
+  id: number
+  email: string
+  username: string | null
 }
 
 interface Photoshoot {
@@ -26,6 +33,9 @@ interface Photoshoot {
   title: string
   description: string
   date: string
+  ownerId: number | null
+  public: boolean
+  sharedWith: number[]
 }
 
 export default function PhotoshootDetailPage() {
@@ -40,18 +50,49 @@ export default function PhotoshootDetailPage() {
   const [photoModalOpen, setPhotoModalOpen] = useState(false)
   const [viewModalOpen, setViewModalOpen] = useState(false)
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null)
+  const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number>(0)
   const [comments, setComments] = useState<Comment[]>([])
   const [caption, setCaption] = useState('')
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [commentText, setCommentText] = useState('')
   const [uploading, setUploading] = useState(false)
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null)
+  const [editCommentText, setEditCommentText] = useState('')
+  const [editPhotoshootModalOpen, setEditPhotoshootModalOpen] = useState(false)
+  const [editPhotoModalOpen, setEditPhotoModalOpen] = useState(false)
+  const [editingPhoto, setEditingPhoto] = useState<Photo | null>(null)
+  const [editPhotoshootData, setEditPhotoshootData] = useState({
+    title: '',
+    description: '',
+    date: '',
+    public: false
+  })
+  const [editPhotoCaption, setEditPhotoCaption] = useState('')
+  const [users, setUsers] = useState<User[]>([])
+  const [shareModalOpen, setShareModalOpen] = useState(false)
+  const [selectedUserIds, setSelectedUserIds] = useState<number[]>([])
 
   useEffect(() => {
     if (photoshootId) {
       fetchPhotoshoot()
       fetchPhotos()
+      if (session) {
+        fetchUsers()
+      }
     }
-  }, [photoshootId])
+  }, [photoshootId, session])
+
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch('/api/users')
+      if (response.ok) {
+        const data = await response.json()
+        setUsers(data)
+      }
+    } catch (error) {
+      console.error('Failed to fetch users:', error)
+    }
+  }
 
   const fetchPhotoshoot = async () => {
     try {
@@ -174,10 +215,188 @@ export default function PhotoshootDetailPage() {
     }
   }
 
-  const openPhotoViewer = (photo: Photo) => {
+  const openPhotoViewer = (photo: Photo, index: number) => {
     setSelectedPhoto(photo)
+    setSelectedPhotoIndex(index)
     setViewModalOpen(true)
-    fetchComments(photo.id)
+    if (session) {
+      fetchComments(photo.id)
+    }
+  }
+
+  const navigatePhoto = (direction: 'next' | 'prev') => {
+    let newIndex = selectedPhotoIndex
+    if (direction === 'next' && selectedPhotoIndex < photos.length - 1) {
+      newIndex = selectedPhotoIndex + 1
+    } else if (direction === 'prev' && selectedPhotoIndex > 0) {
+      newIndex = selectedPhotoIndex - 1
+    }
+    
+    const newPhoto = photos[newIndex]
+    if (newPhoto) {
+      setSelectedPhoto(newPhoto)
+      setSelectedPhotoIndex(newIndex)
+      if (session) {
+        fetchComments(newPhoto.id)
+      }
+    }
+  }
+
+  const handleEditComment = async (commentId: number) => {
+    if (!editCommentText.trim()) return
+
+    try {
+      const response = await fetch(
+        `/api/photoshoots/${photoshootId}/photos/${selectedPhoto?.id}/comments/${commentId}`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ body: editCommentText })
+        }
+      )
+
+      if (response.ok) {
+        setEditingCommentId(null)
+        setEditCommentText('')
+        if (selectedPhoto) fetchComments(selectedPhoto.id)
+      }
+    } catch (error) {
+      console.error('Failed to edit comment:', error)
+    }
+  }
+
+  const handleDeleteComment = async (commentId: number) => {
+    if (!confirm('Delete this comment?')) return
+
+    try {
+      const response = await fetch(
+        `/api/photoshoots/${photoshootId}/photos/${selectedPhoto?.id}/comments/${commentId}`,
+        { method: 'DELETE' }
+      )
+
+      if (response.ok) {
+        if (selectedPhoto) fetchComments(selectedPhoto.id)
+      }
+    } catch (error) {
+      console.error('Failed to delete comment:', error)
+    }
+  }
+
+  const openEditPhotoshootModal = () => {
+    if (photoshoot) {
+      setEditPhotoshootData({
+        title: photoshoot.title,
+        description: photoshoot.description,
+        date: photoshoot.date ? new Date(photoshoot.date).toISOString().split('T')[0] : '',
+        public: photoshoot.public
+      })
+      setEditPhotoshootModalOpen(true)
+    }
+  }
+
+  const handleEditPhotoshootSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    try {
+      const dateWithTime = editPhotoshootData.date ? `${editPhotoshootData.date}T10:00:00Z` : null
+
+      const response = await fetch(`/api/photoshoots/${photoshootId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: editPhotoshootData.title,
+          description: editPhotoshootData.description,
+          date: dateWithTime,
+          public: editPhotoshootData.public
+        })
+      })
+
+      if (response.ok) {
+        setEditPhotoshootModalOpen(false)
+        fetchPhotoshoot()
+      }
+    } catch (error) {
+      console.error('Failed to update photoshoot:', error)
+    }
+  }
+
+  const openShareModal = () => {
+    if (photoshoot) {
+      setSelectedUserIds(photoshoot.sharedWith)
+      setShareModalOpen(true)
+    }
+  }
+
+  const toggleUserSelection = (userId: number) => {
+    setSelectedUserIds(prev => 
+      prev.includes(userId) 
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId]
+    )
+  }
+
+  const handleShareSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    try {
+      const response = await fetch(`/api/photoshoots/${photoshootId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sharedWith: selectedUserIds })
+      })
+
+      if (response.ok) {
+        setShareModalOpen(false)
+        fetchPhotoshoot()
+      }
+    } catch (error) {
+      console.error('Failed to update sharing:', error)
+    }
+  }
+
+  const openEditPhotoModal = (photo: Photo) => {
+    setEditingPhoto(photo)
+    setEditPhotoCaption(photo.caption || '')
+    setEditPhotoModalOpen(true)
+  }
+
+  const handleEditPhotoSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingPhoto) return
+
+    try {
+      const response = await fetch(`/api/photoshoots/${photoshootId}/photos/${editingPhoto.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          caption: editPhotoCaption
+        })
+      })
+
+      if (response.ok) {
+        setEditPhotoModalOpen(false)
+        setEditingPhoto(null)
+        fetchPhotos()
+      }
+    } catch (error) {
+      console.error('Failed to update photo:', error)
+    }
+  }
+
+  const handleDeletePhoto = async (photoId: number) => {
+    if (!confirm('Delete this photo? This action cannot be undone.')) return
+
+    try {
+      const response = await fetch(`/api/photoshoots/${photoshootId}/photos/${photoId}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        fetchPhotos()
+      }
+    } catch (error) {
+      console.error('Failed to delete photo:', error)
+    }
   }
 
   const formatDate = (dateString: string) => {
@@ -215,58 +434,97 @@ export default function PhotoshootDetailPage() {
   return (
     <div>
       {/* Back Button */}
-      <Link href="/photoshoots" style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '0.5rem',
-        color: 'var(--primary)',
-        textDecoration: 'none',
-        marginBottom: '1.5rem',
-        fontWeight: '600'
-      }}>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <button
+        onClick={() => router.back()}
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '0.375rem',
+          color: '#1e293b',
+          background: 'none',
+          border: 'none',
+          marginBottom: '1.25rem',
+          fontWeight: '600',
+          cursor: 'pointer',
+          fontSize: '0.875rem',
+          padding: 0
+        }}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <polyline points="15 18 9 12 15 6"/>
         </svg>
-        Back to Photoshoots
-      </Link>
+        Grįžti į fotosesijų sąrašą
+      </button>
 
       {/* Photoshoot Header */}
       <div style={{
-        background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)',
-        padding: '2rem',
-        borderRadius: '1rem',
-        color: 'white',
-        marginBottom: '2rem'
+        background: 'var(--card-bg)',
+        padding: '1.5rem',
+        borderRadius: '0.75rem',
+        border: '1px solid var(--border)',
+        marginBottom: '1.5rem',
+        position: 'relative'
       }}>
+        {session?.user?.id && photoshoot.ownerId === parseInt(session.user.id) && (
+          <button
+            onClick={openEditPhotoshootModal}
+            style={{
+              position: 'absolute',
+              top: '1rem',
+              right: '1rem',
+              background: 'transparent',
+              border: '1px solid var(--border)',
+              color: 'var(--foreground)',
+              padding: '0.5rem 0.875rem',
+              borderRadius: '0.375rem',
+              cursor: 'pointer',
+              fontSize: '0.8125rem',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.375rem'
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+            Edit
+          </button>
+        )}
         <h1 style={{
-          fontSize: 'clamp(2rem, 4vw, 3rem)',
-          marginBottom: '1rem',
-          fontWeight: '700'
+          fontSize: '1.5rem',
+          marginBottom: '0.5rem',
+          fontWeight: '600',
+          color: 'var(--foreground)',
+          paddingRight: '5rem'
         }}>
           {photoshoot.title}
         </h1>
-        <p style={{
-          fontSize: '1.125rem',
-          marginBottom: '1.5rem',
-          opacity: 0.95
-        }}>
-          {photoshoot.description}
-        </p>
+        {photoshoot.description && (
+          <p style={{
+            fontSize: '0.875rem',
+            marginBottom: '0.75rem',
+            color: '#64748b',
+            lineHeight: '1.5'
+          }}>
+            {photoshoot.description}
+          </p>
+        )}
         <div style={{
           display: 'flex',
-          gap: '2rem',
-          flexWrap: 'wrap',
-          fontSize: '0.95rem'
+          alignItems: 'center',
+          gap: '0.375rem',
+          fontSize: '0.8125rem',
+          color: '#64748b'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-              <line x1="16" y1="2" x2="16" y2="6"/>
-              <line x1="8" y1="2" x2="8" y2="6"/>
-              <line x1="3" y1="10" x2="21" y2="10"/>
-            </svg>
-            {formatDate(photoshoot.date)}
-          </div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          {new Date(photoshoot.date).toLocaleDateString('lt-LT', { year: 'numeric', month: 'short', day: 'numeric' })}
         </div>
       </div>
 
@@ -275,33 +533,36 @@ export default function PhotoshootDetailPage() {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: '1.5rem',
+        marginBottom: '1.25rem',
         flexWrap: 'wrap',
-        gap: '1rem'
+        gap: '0.875rem'
       }}>
         <h2 style={{
-          fontSize: '2rem',
+          fontSize: '1.25rem',
+          fontWeight: '600',
           color: 'var(--foreground)'
         }}>
           Photos ({photos.length})
         </h2>
-        {session && (
+        {session?.user?.id && photoshoot.ownerId === parseInt(session.user.id) && (
           <button
             onClick={() => setPhotoModalOpen(true)}
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '0.5rem',
-              background: 'var(--accent)',
+              gap: '0.375rem',
+              background: 'rgba(255,255,255,0.1)',
               color: 'white',
               border: 'none',
-              padding: '0.75rem 1.25rem',
-              borderRadius: '0.5rem',
+              padding: '0.625rem 1rem',
+              borderRadius: '0.375rem',
+              fontSize: '0.875rem',
               fontWeight: '600',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              backdropFilter: 'blur(10px)'
             }}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="12" y1="5" x2="12" y2="19"/>
               <line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
@@ -314,39 +575,40 @@ export default function PhotoshootDetailPage() {
       {photos.length === 0 ? (
         <div style={{
           textAlign: 'center',
-          padding: '4rem 2rem',
+          padding: '3rem 1.5rem',
           background: 'var(--card-bg)',
-          borderRadius: '1rem',
-          border: '2px dashed var(--border)'
+          borderRadius: '0.75rem',
+          border: '1px dashed var(--border)'
         }}>
           <svg
-            width="64"
-            height="64"
+            width="48"
+            height="48"
             viewBox="0 0 24 24"
             fill="none"
             stroke="#cbd5e1"
             strokeWidth="2"
-            style={{ margin: '0 auto 1rem' }}
+            style={{ margin: '0 auto 0.875rem' }}
           >
             <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
             <circle cx="8.5" cy="8.5" r="1.5"/>
             <polyline points="21 15 16 10 5 21"/>
           </svg>
-          <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>
+          <h3 style={{ fontSize: '1.125rem', marginBottom: '0.375rem', fontWeight: '600' }}>
             No photos yet
           </h3>
-          <p style={{ color: '#64748b', marginBottom: '1.5rem' }}>
+          <p style={{ color: '#64748b', marginBottom: '1.25rem', fontSize: '0.875rem' }}>
             Add your first photo to this photoshoot
           </p>
           {session && (
             <button
               onClick={() => setPhotoModalOpen(true)}
               style={{
-                background: 'var(--primary)',
+                background: '#1e293b',
                 color: 'white',
                 border: 'none',
-                padding: '0.75rem 1.5rem',
-                borderRadius: '0.5rem',
+                padding: '0.625rem 1.25rem',
+                borderRadius: '0.375rem',
+                fontSize: '0.875rem',
                 fontWeight: '600',
                 cursor: 'pointer'
               }}
@@ -357,28 +619,31 @@ export default function PhotoshootDetailPage() {
         </div>
       ) : (
         <div className="grid-container">
-          {photos.map((photo) => (
+          {photos.map((photo, index) => (
             <div
               key={photo.id}
               className="card"
               style={{
                 background: 'var(--card-bg)',
-                borderRadius: '1rem',
+                borderRadius: '0.625rem',
                 overflow: 'hidden',
                 border: '1px solid var(--border)',
-                cursor: 'pointer'
+                position: 'relative'
               }}
-              onClick={() => openPhotoViewer(photo)}
             >
               {/* Photo Image */}
-              <div style={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                height: '250px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                position: 'relative'
-              }}>
+              <div 
+                style={{
+                  background: '#e2e8f0',
+                  height: '200px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  position: 'relative',
+                  cursor: 'pointer'
+                }}
+                onClick={() => openPhotoViewer(photo, index)}
+              >
                 {photo.filename ? (
                   <img
                     src={photo.filename}
@@ -390,22 +655,104 @@ export default function PhotoshootDetailPage() {
                     }}
                   />
                 ) : (
-                  <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2">
                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
                     <circle cx="8.5" cy="8.5" r="1.5"/>
                     <polyline points="21 15 16 10 5 21"/>
                   </svg>
                 )}
+                
+                {/* Maximize button (bottom-left) */}
+                <div style={{
+                  position: 'absolute',
+                  bottom: '0.5rem',
+                  left: '0.5rem'
+                }}>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openPhotoViewer(photo, index);
+                    }}
+                    style={{
+                      background: 'rgba(30,41,59,0.9)',
+                      border: 'none',
+                      padding: '0.375rem',
+                      borderRadius: '0.25rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center'
+                    }}
+                    title="Maximize photo"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                      <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Edit/Delete buttons for owner */}
+                {session?.user?.id && photoshoot.ownerId === parseInt(session.user.id) && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '0.5rem',
+                    right: '0.5rem',
+                    display: 'flex',
+                    gap: '0.375rem'
+                  }}>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openEditPhotoModal(photo);
+                      }}
+                      style={{
+                        background: 'rgba(255,255,255,0.95)',
+                        border: 'none',
+                        padding: '0.375rem',
+                        borderRadius: '0.25rem',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center'
+                      }}
+                      title="Edit photo"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeletePhoto(photo.id);
+                      }}
+                      style={{
+                        background: 'rgba(239,68,68,0.95)',
+                        border: 'none',
+                        padding: '0.375rem',
+                        borderRadius: '0.25rem',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center'
+                      }}
+                      title="Delete photo"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                      </svg>
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Photo Info */}
-              <div style={{ padding: '1.25rem' }}>
+              <div style={{ padding: '1rem' }}>
                 {photo.caption && (
                   <p style={{
                     color: '#64748b',
-                    fontSize: '0.875rem',
-                    lineHeight: '1.5',
-                    marginBottom: '1rem'
+                    fontSize: '0.8125rem',
+                    lineHeight: '1.4',
+                    marginBottom: '0'
                   }}>
                     {photo.caption}
                   </p>
@@ -425,15 +772,16 @@ export default function PhotoshootDetailPage() {
         <form onSubmit={handlePhotoSubmit} style={{
           display: 'flex',
           flexDirection: 'column',
-          gap: '1.5rem',
+          gap: '1.25rem',
           minWidth: '300px',
           maxWidth: '500px'
         }}>
           <div>
             <label style={{
               display: 'block',
-              marginBottom: '0.5rem',
+              marginBottom: '0.375rem',
               fontWeight: '600',
+              fontSize: '0.8125rem',
               color: 'var(--foreground)'
             }}>
               Photos *
@@ -449,10 +797,10 @@ export default function PhotoshootDetailPage() {
               }}
               style={{
                 width: '100%',
-                padding: '0.75rem',
+                padding: '0.625rem',
                 border: '2px solid var(--border)',
-                borderRadius: '0.5rem',
-                fontSize: '1rem'
+                borderRadius: '0.375rem',
+                fontSize: '0.875rem'
               }}
             />
             {selectedFiles.length > 0 && (
@@ -517,8 +865,9 @@ export default function PhotoshootDetailPage() {
           <div>
             <label style={{
               display: 'block',
-              marginBottom: '0.5rem',
+              marginBottom: '0.375rem',
               fontWeight: '600',
+              fontSize: '0.8125rem',
               color: 'var(--foreground)'
             }}>
               Caption
@@ -529,10 +878,10 @@ export default function PhotoshootDetailPage() {
               rows={2}
               style={{
                 width: '100%',
-                padding: '0.75rem',
+                padding: '0.625rem',
                 border: '2px solid var(--border)',
-                borderRadius: '0.5rem',
-                fontSize: '1rem',
+                borderRadius: '0.375rem',
+                fontSize: '0.875rem',
                 resize: 'vertical'
               }}
               placeholder="Add a caption for these photos..."
@@ -541,9 +890,9 @@ export default function PhotoshootDetailPage() {
 
           <div style={{
             display: 'flex',
-            gap: '1rem',
+            gap: '0.875rem',
             justifyContent: 'flex-end',
-            paddingTop: '1rem',
+            paddingTop: '0.875rem',
             borderTop: '1px solid var(--border)'
           }}>
             <button
@@ -554,10 +903,11 @@ export default function PhotoshootDetailPage() {
                 setCaption('')
               }}
               style={{
-                padding: '0.75rem 1.5rem',
-                border: '2px solid var(--border)',
+                padding: '0.625rem 1.125rem',
+                border: '1px solid var(--border)',
                 background: 'white',
-                borderRadius: '0.5rem',
+                borderRadius: '0.375rem',
+                fontSize: '0.875rem',
                 fontWeight: '600',
                 cursor: 'pointer'
               }}
@@ -568,11 +918,12 @@ export default function PhotoshootDetailPage() {
               type="submit"
               disabled={uploading || selectedFiles.length === 0}
               style={{
-                padding: '0.75rem 1.5rem',
+                padding: '0.625rem 1.125rem',
                 border: 'none',
-                background: uploading || selectedFiles.length === 0 ? '#cbd5e1' : 'var(--accent)',
+                background: uploading || selectedFiles.length === 0 ? '#cbd5e1' : '#1e293b',
                 color: 'white',
-                borderRadius: '0.5rem',
+                borderRadius: '0.375rem',
+                fontSize: '0.875rem',
                 fontWeight: '600',
                 cursor: uploading || selectedFiles.length === 0 ? 'not-allowed' : 'pointer'
               }}
@@ -591,50 +942,106 @@ export default function PhotoshootDetailPage() {
       >
         {selectedPhoto && (
           <div style={{ maxWidth: '800px' }}>
-            {selectedPhoto.filename ? (
-              <img
-                src={selectedPhoto.filename}
-                alt={""}
-                style={{
+            <div style={{ position: 'relative' }}>
+              {selectedPhoto.filename ? (
+                <img
+                  src={selectedPhoto.filename}
+                  alt={""}
+                  style={{
+                    width: '100%',
+                    maxHeight: 'calc(90vh - 120px)',
+                    objectFit: 'contain',
+                    borderRadius: '0.5rem',
+                    marginBottom: '1rem'
+                  }}
+                />
+              ) : (
+                <div style={{
                   width: '100%',
-                  maxHeight: '50vh',
-                  objectFit: 'contain',
+                  height: '400px',
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   borderRadius: '0.5rem',
                   marginBottom: '1rem'
-                }}
-              />
-            ) : (
-              <div style={{
-                width: '100%',
-                height: '400px',
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: '0.5rem',
-                marginBottom: '1rem'
-              }}>
-                <svg width="96" height="96" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                  <circle cx="8.5" cy="8.5" r="1.5"/>
-                  <polyline points="21 15 16 10 5 21"/>
-                </svg>
-              </div>
-            )}
+                }}>
+                  <svg width="96" height="96" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <polyline points="21 15 16 10 5 21"/>
+                  </svg>
+                </div>
+              )}
+              
+              {/* Navigation Buttons */}
+              {selectedPhotoIndex > 0 && (
+                <button
+                  onClick={() => navigatePhoto('prev')}
+                  style={{
+                    position: 'absolute',
+                    left: '1rem',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'rgba(0,0,0,0.7)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: '48px',
+                    height: '48px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="15 18 9 12 15 6"/>
+                  </svg>
+                </button>
+              )}
+              {selectedPhotoIndex < photos.length - 1 && (
+                <button
+                  onClick={() => navigatePhoto('next')}
+                  style={{
+                    position: 'absolute',
+                    right: '1rem',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'rgba(0,0,0,0.7)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: '48px',
+                    height: '48px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="9 18 15 12 9 6"/>
+                  </svg>
+                </button>
+              )}
+            </div>
+            
             {selectedPhoto.caption && (
               <p style={{ color: '#64748b', lineHeight: '1.6', marginBottom: '1.5rem' }}>
                 {selectedPhoto.caption}
               </p>
             )}
 
-            {/* Comments Section */}
-            <div style={{
-              borderTop: '1px solid var(--border)',
-              paddingTop: '1.5rem'
-            }}>
-              <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem', fontWeight: '600' }}>
-                Comments ({comments.length})
-              </h3>
+            {/* Comments Section - Only visible when logged in */}
+            {session && (
+              <div style={{
+                borderTop: '1px solid var(--border)',
+                paddingTop: '1.5rem'
+              }}>
+                <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem', fontWeight: '600' }}>
+                  Comments ({comments.length})
+                </h3>
               
               {/* Comments List */}
               <div style={{
@@ -655,12 +1062,110 @@ export default function PhotoshootDetailPage() {
                         borderRadius: '0.5rem',
                         border: '1px solid var(--border)'
                       }}>
-                        <p style={{ marginBottom: '0.5rem', lineHeight: '1.5' }}>
-                          {comment.body}
-                        </p>
-                        <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-                          User #{comment.authorId}
-                        </span>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <span style={{ fontWeight: '600', color: '#667eea', fontSize: '0.875rem' }}>
+                              {comment.authorUsername || `User #${comment.authorId}`}
+                            </span>
+                          </div>
+                          
+                          {session?.user?.id && comment.authorId === parseInt(session.user.id) && (
+                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditingCommentId(comment.id);
+                                  setEditCommentText(comment.body);
+                                }}
+                                style={{
+                                  background: 'none',
+                                  border: '1px solid #cbd5e1',
+                                  padding: '0.25rem 0.5rem',
+                                  borderRadius: '0.375rem',
+                                  cursor: 'pointer',
+                                  color: '#475569',
+                                  fontSize: '0.75rem'
+                                }}
+                              >
+                                Edit
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteComment(comment.id)}
+                                style={{
+                                  background: 'none',
+                                  border: '1px solid #ef4444',
+                                  padding: '0.25rem 0.5rem',
+                                  borderRadius: '0.375rem',
+                                  cursor: 'pointer',
+                                  color: '#ef4444',
+                                  fontSize: '0.75rem'
+                                }}
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {editingCommentId === comment.id ? (
+                          <div>
+                            <textarea
+                              value={editCommentText}
+                              onChange={(e) => setEditCommentText(e.target.value)}
+                              style={{
+                                width: '100%',
+                                padding: '0.75rem',
+                                borderRadius: '0.5rem',
+                                border: '1px solid var(--border)',
+                                fontSize: '0.875rem',
+                                marginBottom: '0.5rem',
+                                minHeight: '80px',
+                                resize: 'vertical',
+                                background: 'white'
+                              }}
+                            />
+                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                              <button
+                                type="button"
+                                onClick={() => handleEditComment(comment.id)}
+                                style={{
+                                  padding: '0.5rem 1rem',
+                                  borderRadius: '0.5rem',
+                                  border: 'none',
+                                  background: '#667eea',
+                                  color: 'white',
+                                  cursor: 'pointer',
+                                  fontSize: '0.875rem'
+                                }}
+                              >
+                                Save
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditingCommentId(null);
+                                  setEditCommentText('');
+                                }}
+                                style={{
+                                  padding: '0.5rem 1rem',
+                                  borderRadius: '0.5rem',
+                                  border: '1px solid var(--border)',
+                                  background: 'white',
+                                  color: '#475569',
+                                  cursor: 'pointer',
+                                  fontSize: '0.875rem'
+                                }}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <p style={{ marginBottom: '0', lineHeight: '1.5', color: '#334155' }}>
+                            {comment.body}
+                          </p>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -694,7 +1199,7 @@ export default function PhotoshootDetailPage() {
                     style={{
                       width: '100%',
                       padding: '0.75rem',
-                      background: 'var(--primary)',
+                      background: '#1e293b',
                       color: 'white',
                       border: 'none',
                       borderRadius: '0.5rem',
@@ -707,8 +1212,396 @@ export default function PhotoshootDetailPage() {
                 </form>
               )}
             </div>
+            )}
           </div>
         )}
+      </Modal>
+
+      {/* Edit Photoshoot Modal */}
+      <Modal
+        isOpen={editPhotoshootModalOpen}
+        onClose={() => setEditPhotoshootModalOpen(false)}
+        title="Edit Photoshoot"
+      >
+        <form onSubmit={handleEditPhotoshootSubmit} style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '1.25rem',
+          minWidth: '300px',
+          maxWidth: '500px'
+        }}>
+          <div>
+            <label style={{
+              display: 'block',
+              marginBottom: '0.375rem',
+              fontWeight: '600',
+              fontSize: '0.8125rem',
+              color: 'var(--foreground)'
+            }}>
+              Title *
+            </label>
+            <input
+              type="text"
+              value={editPhotoshootData.title}
+              onChange={(e) => setEditPhotoshootData({ ...editPhotoshootData, title: e.target.value })}
+              required
+              style={{
+                width: '100%',
+                padding: '0.625rem',
+                border: '2px solid var(--border)',
+                borderRadius: '0.375rem',
+                fontSize: '0.875rem'
+              }}
+            />
+          </div>
+
+          <div>
+            <label style={{
+              display: 'block',
+              marginBottom: '0.375rem',
+              fontWeight: '600',
+              fontSize: '0.8125rem',
+              color: 'var(--foreground)'
+            }}>
+              Description
+            </label>
+            <textarea
+              value={editPhotoshootData.description}
+              onChange={(e) => setEditPhotoshootData({ ...editPhotoshootData, description: e.target.value })}
+              rows={3}
+              style={{
+                width: '100%',
+                padding: '0.625rem',
+                border: '2px solid var(--border)',
+                borderRadius: '0.375rem',
+                fontSize: '0.875rem',
+                resize: 'vertical'
+              }}
+            />
+          </div>
+
+          <div>
+            <label style={{
+              display: 'block',
+              marginBottom: '0.375rem',
+              fontWeight: '600',
+              fontSize: '0.8125rem',
+              color: 'var(--foreground)'
+            }}>
+              Date
+            </label>
+            <input
+              type="date"
+              value={editPhotoshootData.date}
+              onChange={(e) => setEditPhotoshootData({ ...editPhotoshootData, date: e.target.value })}
+              style={{
+                width: '100%',
+                padding: '0.625rem',
+                border: '2px solid var(--border)',
+                borderRadius: '0.375rem',
+                fontSize: '0.875rem'
+              }}
+            />
+          </div>
+
+          <div>
+            <label style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.625rem',
+              cursor: 'pointer',
+              fontWeight: '600',
+              color: 'var(--foreground)'
+            }}>
+              <input
+                type="checkbox"
+                checked={editPhotoshootData.public}
+                onChange={(e) => setEditPhotoshootData({ ...editPhotoshootData, public: e.target.checked })}
+                style={{
+                  width: '18px',
+                  height: '18px',
+                  cursor: 'pointer'
+                }}
+              />
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.875rem' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  {editPhotoshootData.public ? (
+                    <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>
+                  ) : (
+                    <><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></>
+                  )}
+                </svg>
+                Make photoshoot public
+              </span>
+            </label>
+            <p style={{
+              fontSize: '0.75rem',
+              color: '#64748b',
+              marginTop: '0.375rem',
+              marginLeft: '1.5rem'
+            }}>
+              {editPhotoshootData.public ? 'Anyone can view this photoshoot' : 'Only you and shared users can view this photoshoot'}
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+            <button
+              type="button"
+              onClick={() => {
+                setEditPhotoshootModalOpen(false);
+                openShareModal();
+              }}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                background: 'rgba(30, 41, 59, 0.1)',
+                color: '#1e293b',
+                border: '1px solid #1e293b',
+                borderRadius: '0.375rem',
+                fontSize: '0.875rem',
+                fontWeight: '600',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.375rem'
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+                <polyline points="16 6 12 2 8 6"/>
+                <line x1="12" y1="2" x2="12" y2="15"/>
+              </svg>
+              Share with Users
+            </button>
+
+            <div style={{ display: 'flex', gap: '0.875rem' }}>
+              <button
+                type="submit"
+                style={{
+                  flex: 1,
+                  padding: '0.75rem',
+                  background: '#1e293b',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '0.375rem',
+                  fontSize: '0.875rem',
+                  fontWeight: '600',
+                  cursor: 'pointer'
+                }}
+              >
+                Save Changes
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditPhotoshootModalOpen(false)}
+                style={{
+                  flex: 1,
+                  padding: '0.75rem',
+                  background: 'var(--card-bg)',
+                  color: 'var(--foreground)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '0.375rem',
+                  fontSize: '0.875rem',
+                  fontWeight: '600',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Edit Photo Modal */}
+      <Modal
+        isOpen={editPhotoModalOpen}
+        onClose={() => {
+          setEditPhotoModalOpen(false);
+          setEditingPhoto(null);
+        }}
+        title="Edit Photo"
+      >
+        <form onSubmit={handleEditPhotoSubmit} style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '1.25rem',
+          minWidth: '300px',
+          maxWidth: '500px'
+        }}>
+          <div>
+            <label style={{
+              display: 'block',
+              marginBottom: '0.375rem',
+              fontWeight: '600',
+              fontSize: '0.8125rem',
+              color: 'var(--foreground)'
+            }}>
+              Caption
+            </label>
+            <textarea
+              value={editPhotoCaption}
+              onChange={(e) => setEditPhotoCaption(e.target.value)}
+              rows={3}
+              placeholder="Add a caption..."
+              style={{
+                width: '100%',
+                padding: '0.625rem',
+                border: '2px solid var(--border)',
+                borderRadius: '0.375rem',
+                fontSize: '0.875rem',
+                resize: 'vertical'
+              }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', gap: '0.875rem' }}>
+            <button
+              type="submit"
+              style={{
+                flex: 1,
+                padding: '0.75rem',
+                background: '#1e293b',
+                color: 'white',
+                border: 'none',
+                borderRadius: '0.375rem',
+                fontSize: '0.875rem',
+                fontWeight: '600',
+                cursor: 'pointer'
+              }}
+            >
+              Save Changes
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setEditPhotoModalOpen(false);
+                setEditingPhoto(null);
+              }}
+              style={{
+                flex: 1,
+                padding: '0.75rem',
+                background: 'var(--card-bg)',
+                color: 'var(--foreground)',
+                border: '1px solid var(--border)',
+                borderRadius: '0.375rem',
+                fontSize: '0.875rem',
+                fontWeight: '600',
+                cursor: 'pointer'
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Share Modal */}
+      <Modal
+        isOpen={shareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+        title="Share Photoshoot"
+      >
+        <form onSubmit={handleShareSubmit} style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '1.25rem',
+          minWidth: '400px'
+        }}>
+          <div>
+            <label style={{
+              display: 'block',
+              marginBottom: '0.875rem',
+              fontWeight: '600',
+              fontSize: '0.8125rem',
+              color: 'var(--foreground)'
+            }}>
+              Select users to share with:
+            </label>
+            <div style={{
+              maxHeight: '300px',
+              overflowY: 'auto',
+              border: '1px solid var(--border)',
+              borderRadius: '0.375rem',
+              padding: '0.375rem'
+            }}>
+              {users
+                .filter(user => user.id !== photoshoot?.ownerId)
+                .map((user) => (
+                  <label
+                    key={user.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.625rem',
+                      padding: '0.625rem',
+                      borderRadius: '0.25rem',
+                      cursor: 'pointer',
+                      background: selectedUserIds.includes(user.id) ? '#f0f9ff' : 'transparent'
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedUserIds.includes(user.id)}
+                      onChange={() => toggleUserSelection(user.id)}
+                      style={{
+                        width: '16px',
+                        height: '16px',
+                        cursor: 'pointer'
+                      }}
+                    />
+                    <div>
+                      <div style={{ fontWeight: '600', fontSize: '0.875rem', color: 'var(--foreground)' }}>
+                        {user.username || user.email}
+                      </div>
+                      {user.username && (
+                        <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                          {user.email}
+                        </div>
+                      )}
+                    </div>
+                  </label>
+                ))}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '0.875rem' }}>
+            <button
+              type="submit"
+              style={{
+                flex: 1,
+                padding: '0.75rem',
+                background: '#1e293b',
+                color: 'white',
+                border: 'none',
+                borderRadius: '0.375rem',
+                fontSize: '0.875rem',
+                fontWeight: '600',
+                cursor: 'pointer'
+              }}
+            >
+              Save Changes
+            </button>
+            <button
+              type="button"
+              onClick={() => setShareModalOpen(false)}
+              style={{
+                flex: 1,
+                padding: '0.75rem',
+                background: 'var(--card-bg)',
+                color: 'var(--foreground)',
+                border: '1px solid var(--border)',
+                borderRadius: '0.375rem',
+                fontSize: '0.875rem',
+                fontWeight: '600',
+                cursor: 'pointer'
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
       </Modal>
     </div>
   )

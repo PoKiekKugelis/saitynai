@@ -4,25 +4,47 @@ import { CreatePhotoshootDTOZ } from "@/lib/dtos";
 import { requireRole } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
-  const session = await requireRole(request, ["ADMIN", "USER"])
-  if (session instanceof NextResponse) return session
-
   try {
     const { searchParams } = new URL(request.url);
     const ownerIdParam = searchParams.get('ownerId');
-    if(!ownerIdParam){
-      const session = await requireRole(request, ["ADMIN"])
+    const publicParam = searchParams.get('public');
+    
+    let whereClause: any = {};
+    
+    // Public photoshoots - anyone can view
+    if (publicParam === 'true') {
+      whereClause.public = true;
+      const data = await prisma.photoshoot.findMany({
+      where: whereClause,
+      orderBy: { id: 'asc' },
+      });
+      return NextResponse.json(data, { status: 200 });
+    }
+    else if (ownerIdParam) {
+      const session = await requireRole(request, ["ADMIN", "USER"])
       if (session instanceof NextResponse) return session
+      const userId = parseInt(session.user.id);
+      const requestedOwnerId = parseInt(ownerIdParam);
+      
+      // Only allow if requesting own photoshoots or admin
+      if (requestedOwnerId !== userId && session.user.role !== "ADMIN") {
+        return NextResponse.json(
+          { error: "Forbidden - no permission" },
+          { status: 403 }
+        );
+      }
+      
+      whereClause = {
+        OR: [
+          { ownerId: requestedOwnerId },
+          { sharedWith: { has: requestedOwnerId } }
+        ]
+      };
     }
-    if(ownerIdParam != session.user.id && session.user.role != "ADMIN" && ownerIdParam != String(1)){
-       return NextResponse.json(
-        { error: "Forbidden - no permission" },
-        { status: 403 }
-      )
+    // Default to public photoshoots if no parameters provided
+    else {
+      whereClause.public = true;
     }
-    
-    
-    const whereClause = ownerIdParam ? { ownerId: parseInt(ownerIdParam) } : {};
     
     const data = await prisma.photoshoot.findMany({
       where: whereClause,
@@ -39,7 +61,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const session = await requireRole(request, ["ADMIN"])
+  const session = await requireRole(request, ["ADMIN", "USER"])
   if (session instanceof NextResponse) return session
 
   try {
@@ -54,8 +76,12 @@ export async function POST(request: NextRequest) {
     }
 
     const createDTO = validationResult.data;
+    // Set ownerId to current user
     const newPhotoshoot = await prisma.photoshoot.create({
-      data: createDTO,
+      data: {
+        ...createDTO,
+        ownerId: parseInt(session.user.id),
+      },
     });
 
     return NextResponse.json(newPhotoshoot, { status: 201 });

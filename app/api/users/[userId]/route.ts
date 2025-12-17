@@ -53,7 +53,7 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ userId: string }> }
 ) {
-  const session = await requireRole(request, ["USER"])
+  const session = await requireRole(request, ["USER", "ADMIN"])
   if (session instanceof NextResponse) return session
 
   try {

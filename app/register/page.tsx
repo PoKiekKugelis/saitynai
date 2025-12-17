@@ -19,6 +19,8 @@ export default function RegisterPage() {
     const email = formData.get("email");
     const password = formData.get("password");
     const confirmPassword = formData.get("confirmPassword");
+    const username = formData.get("username");
+    const phoneNumber = formData.get("phoneNumber");
 
     if (password !== confirmPassword) {
       setError("Passwords do not match");
@@ -30,7 +32,7 @@ export default function RegisterPage() {
       const response = await fetch('/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password, username, phoneNumber })
       });
 
       if (response.ok) {
@@ -52,26 +54,26 @@ export default function RegisterPage() {
   if (success) {
     return (
       <div style={{
-        maxWidth: '450px',
+        maxWidth: '400px',
         margin: '0 auto',
-        padding: '2rem',
+        padding: '1.5rem',
         textAlign: 'center'
       }}>
         <div style={{
           background: '#d1fae5',
           border: '1px solid #6ee7b7',
-          borderRadius: '1rem',
-          padding: '2rem',
+          borderRadius: '0.875rem',
+          padding: '1.75rem',
           color: '#065f46'
         }}>
-          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ margin: '0 auto 1rem' }}>
+          <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ margin: '0 auto 0.875rem' }}>
             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
             <polyline points="22 4 12 14.01 9 11.01"/>
           </svg>
-          <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', fontWeight: '700' }}>
+          <h2 style={{ fontSize: '1.375rem', marginBottom: '0.375rem', fontWeight: '700' }}>
             Registration Successful!
           </h2>
-          <p>Redirecting to login...</p>
+          <p style={{ fontSize: '0.875rem' }}>Redirecting to login...</p>
         </div>
       </div>
     );
@@ -79,47 +81,30 @@ export default function RegisterPage() {
 
   return (
     <div style={{
-      maxWidth: '450px',
+      maxWidth: '400px',
       margin: '0 auto',
-      padding: '2rem'
+      padding: '1.5rem'
     }}>
       {/* Card */}
       <div style={{
         background: 'var(--card-bg)',
-        padding: '2.5rem',
-        borderRadius: '1rem',
+        padding: '2rem',
+        borderRadius: '0.875rem',
         border: '1px solid var(--border)',
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
       }}>
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <div style={{
-            width: '64px',
-            height: '64px',
-            background: 'linear-gradient(135deg, var(--secondary) 0%, var(--accent) 100%)',
-            borderRadius: '1rem',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 1rem'
-          }}>
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-              <circle cx="8.5" cy="7" r="4"/>
-              <line x1="20" y1="8" x2="20" y2="14"/>
-              <line x1="23" y1="11" x2="17" y2="11"/>
-            </svg>
-          </div>
+        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
           <h1 style={{
-            fontSize: '2rem',
-            marginBottom: '0.5rem',
+            fontSize: '1.625rem',
+            marginBottom: '0.375rem',
             color: 'var(--foreground)',
             fontWeight: '700'
           }}>
-            Create Account
+            Sukurti paskyrą
           </h1>
-          <p style={{ color: '#64748b' }}>
-            Sign up to get started with PhotoGallery
+          <p style={{ color: '#64748b', fontSize: '0.875rem' }}>
+            Prisijunkite, kad valdytumėte savo fotosesijas
           </p>
         </div>
 
@@ -127,28 +112,28 @@ export default function RegisterPage() {
         <form onSubmit={handleSubmit} style={{
           display: 'flex',
           flexDirection: 'column',
-          gap: '1.5rem'
+          gap: '1.25rem'
         }}>
           {/* Email Field */}
           <div>
             <label style={{
               display: 'block',
-              marginBottom: '0.5rem',
+              marginBottom: '0.375rem',
               fontWeight: '600',
               color: 'var(--foreground)',
-              fontSize: '0.875rem'
+              fontSize: '0.8125rem'
             }}>
-              Email Address
+              El. paštas
             </label>
             <div style={{ position: 'relative' }}>
               <div style={{
                 position: 'absolute',
-                left: '1rem',
+                left: '0.875rem',
                 top: '50%',
                 transform: 'translateY(-50%)',
                 color: '#94a3b8'
               }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                   <polyline points="22,6 12,13 2,6"/>
                 </svg>
@@ -157,13 +142,97 @@ export default function RegisterPage() {
                 name="email"
                 type="email"
                 required
-                placeholder="you@example.com"
+                placeholder="vardas@pavyzdys.lt"
                 style={{
                   width: '100%',
-                  padding: '0.875rem 1rem 0.875rem 3rem',
+                  padding: '0.75rem 0.875rem 0.75rem 2.5rem',
                   border: '2px solid var(--border)',
                   borderRadius: '0.5rem',
-                  fontSize: '1rem',
+                  fontSize: '0.9375rem',
+                  fontFamily: 'inherit'
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Username Field */}
+          <div>
+            <label style={{
+              display: 'block',
+              marginBottom: '0.375rem',
+              fontWeight: '600',
+              color: 'var(--foreground)',
+              fontSize: '0.8125rem'
+            }}>
+              Naudotojo vardas
+            </label>
+            <div style={{ position: 'relative' }}>
+              <div style={{
+                position: 'absolute',
+                left: '0.875rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: '#94a3b8'
+              }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+              </div>
+              <input
+                name="username"
+                type="text"
+                required
+                minLength={3}
+                maxLength={50}
+                placeholder="jūsų vardas"
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 0.875rem 0.75rem 2.5rem',
+                  border: '2px solid var(--border)',
+                  borderRadius: '0.5rem',
+                  fontSize: '0.9375rem',
+                  fontFamily: 'inherit'
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Phone Number Field */}
+          <div>
+            <label style={{
+              display: 'block',
+              marginBottom: '0.375rem',
+              fontWeight: '600',
+              color: 'var(--foreground)',
+              fontSize: '0.8125rem'
+            }}>
+              Telefono numeris
+            </label>
+            <div style={{ position: 'relative' }}>
+              <div style={{
+                position: 'absolute',
+                left: '0.875rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: '#94a3b8'
+              }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                </svg>
+              </div>
+              <input
+                name="phoneNumber"
+                type="tel"
+                required
+                maxLength={20}
+                placeholder="+1234567890"
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 0.875rem 0.75rem 2.5rem',
+                  border: '2px solid var(--border)',
+                  borderRadius: '0.5rem',
+                  fontSize: '0.9375rem',
                   fontFamily: 'inherit'
                 }}
               />
@@ -174,22 +243,22 @@ export default function RegisterPage() {
           <div>
             <label style={{
               display: 'block',
-              marginBottom: '0.5rem',
+              marginBottom: '0.375rem',
               fontWeight: '600',
               color: 'var(--foreground)',
-              fontSize: '0.875rem'
+              fontSize: '0.8125rem'
             }}>
-              Password
+              Slaptažodis
             </label>
             <div style={{ position: 'relative' }}>
               <div style={{
                 position: 'absolute',
-                left: '1rem',
+                left: '0.875rem',
                 top: '50%',
                 transform: 'translateY(-50%)',
                 color: '#94a3b8'
               }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                   <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                 </svg>
@@ -199,19 +268,19 @@ export default function RegisterPage() {
                 type="password"
                 required
                 minLength={4}
-                placeholder="Create a password"
+                placeholder="Įveskite slaptažodį"
                 style={{
                   width: '100%',
-                  padding: '0.875rem 1rem 0.875rem 3rem',
+                  padding: '0.75rem 0.875rem 0.75rem 2.5rem',
                   border: '2px solid var(--border)',
                   borderRadius: '0.5rem',
-                  fontSize: '1rem',
+                  fontSize: '0.9375rem',
                   fontFamily: 'inherit'
                 }}
               />
             </div>
-            <p style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '0.25rem' }}>
-              Must be at least 4 characters
+            <p style={{ color: '#64748b', fontSize: '0.6875rem', marginTop: '0.25rem' }}>
+              Turi būti bent 4 simboliai
             </p>
           </div>
 
@@ -219,22 +288,22 @@ export default function RegisterPage() {
           <div>
             <label style={{
               display: 'block',
-              marginBottom: '0.5rem',
+              marginBottom: '0.375rem',
               fontWeight: '600',
               color: 'var(--foreground)',
-              fontSize: '0.875rem'
+              fontSize: '0.8125rem'
             }}>
-              Confirm Password
+              Pakartokite slaptažodį
             </label>
             <div style={{ position: 'relative' }}>
               <div style={{
                 position: 'absolute',
-                left: '1rem',
+                left: '0.875rem',
                 top: '50%',
                 transform: 'translateY(-50%)',
                 color: '#94a3b8'
               }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                   <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                 </svg>
@@ -243,14 +312,13 @@ export default function RegisterPage() {
                 name="confirmPassword"
                 type="password"
                 required
-                minLength={6}
-                placeholder="Confirm your password"
+                minLength={4}
                 style={{
                   width: '100%',
-                  padding: '0.875rem 1rem 0.875rem 3rem',
+                  padding: '0.75rem 0.875rem 0.75rem 2.5rem',
                   border: '2px solid var(--border)',
                   borderRadius: '0.5rem',
-                  fontSize: '1rem',
+                  fontSize: '0.9375rem',
                   fontFamily: 'inherit'
                 }}
               />
@@ -260,17 +328,17 @@ export default function RegisterPage() {
           {/* Error Message */}
           {error && (
             <div style={{
-              padding: '0.875rem',
+              padding: '0.75rem',
               background: '#fee2e2',
               border: '1px solid #fecaca',
               borderRadius: '0.5rem',
               color: '#dc2626',
-              fontSize: '0.875rem',
+              fontSize: '0.8125rem',
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem'
             }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="10"/>
                 <line x1="12" y1="8" x2="12" y2="12"/>
                 <line x1="12" y1="16" x2="12.01" y2="16"/>
@@ -285,13 +353,13 @@ export default function RegisterPage() {
             disabled={loading}
             style={{
               width: '100%',
-              padding: '1rem',
-              background: loading ? '#94a3b8' : 'var(--secondary)',
+              padding: '0.875rem',
+              background: loading ? '#94a3b8' : '#1e293b',
               color: 'white',
               border: 'none',
               borderRadius: '0.5rem',
               fontWeight: '600',
-              fontSize: '1rem',
+              fontSize: '0.9375rem',
               cursor: loading ? 'not-allowed' : 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -302,24 +370,24 @@ export default function RegisterPage() {
             {loading ? (
               <>
                 <div style={{
-                  width: '20px',
-                  height: '20px',
+                  width: '18px',
+                  height: '18px',
                   border: '2px solid white',
                   borderTop: '2px solid transparent',
                   borderRadius: '50%',
                   animation: 'spin 1s linear infinite'
                 }} />
-                Creating account...
+                Kuriama paskyra...
               </>
             ) : (
               <>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                   <circle cx="8.5" cy="7" r="4"/>
                   <line x1="20" y1="8" x2="20" y2="14"/>
                   <line x1="23" y1="11" x2="17" y2="11"/>
                 </svg>
-                Create Account
+                Sukurti
               </>
             )}
           </button>
@@ -327,39 +395,22 @@ export default function RegisterPage() {
 
         {/* Footer */}
         <div style={{
-          marginTop: '1.5rem',
-          paddingTop: '1.5rem',
+          marginTop: '1.25rem',
+          paddingTop: '1.25rem',
           borderTop: '1px solid var(--border)',
           textAlign: 'center'
         }}>
-          <p style={{ color: '#64748b', fontSize: '0.875rem' }}>
+          <p style={{ color: '#64748b', fontSize: '0.8125rem' }}>
             Already have an account?{' '}
             <Link href="/login" style={{
-              color: 'var(--primary)',
+              color: '#1e293b',
               fontWeight: '600',
               textDecoration: 'none'
             }}>
-              Sign in
+              Prisijunkite
             </Link>
           </p>
         </div>
-      </div>
-
-      {/* Back to Home */}
-      <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
-        <Link href="/" style={{
-          color: 'var(--primary)',
-          textDecoration: 'none',
-          fontWeight: '600',
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '0.5rem'
-        }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="15 18 9 12 15 6"/>
-          </svg>
-          Back to Home
-        </Link>
       </div>
     </div>
   );

@@ -24,9 +24,21 @@ export async function GET(request: NextRequest,
       orderBy: { created_at: 'asc' },
     });
 
-    const dtos = comments.map(commentToDTO);
+    // Fetch usernames for all comments
+    const commentsWithUsernames = await Promise.all(
+      comments.map(async (comment) => {
+        const user = await prisma.user.findUnique({
+          where: { id: comment.authorId },
+          select: { username: true }
+        });
+        return {
+          ...commentToDTO(comment),
+          authorUsername: user?.username || `User #${comment.authorId}`
+        };
+      })
+    );
 
-    return NextResponse.json(dtos, { status: 200 });
+    return NextResponse.json(commentsWithUsernames, { status: 200 });
   } catch (error: unknown) {
     return NextResponse.json(
       { error: "Failed to fetch comments", details: (error as { meta?: unknown })?.meta },
@@ -75,17 +87,6 @@ export async function POST(request: NextRequest,
 }
 
 export async function ErrorCheck(phid: number, phsid: number, session: { user: { id: string; role: string } }) {
-  const photoshoot = await prisma.photoshoot.findUnique({
-    where: { id: phsid }
-  });
-
-  if (photoshoot?.ownerId != parseInt(session.user.id) && session.user.role != "ADMIN") {
-    return NextResponse.json(
-      { error: "Forbidden - no permissions" },
-      { status: 403 }
-    )
-  }
-
   if (isNaN(phsid)) {
     return NextResponse.json(
       { error: "Invalid photoshoot ID" },
@@ -93,10 +94,28 @@ export async function ErrorCheck(phid: number, phsid: number, session: { user: {
     );
   }
 
+  const photoshoot = await prisma.photoshoot.findUnique({
+    where: { id: phsid }
+  });
+
   if (!photoshoot) {
     return NextResponse.json(
       { error: "photoshoot not found" },
       { status: 404 }
+    );
+  }
+
+  // Check permissions: owner, shared user, admin, or public photoshoot
+  const userId = parseInt(session.user.id);
+  const isOwner = photoshoot.ownerId === userId;
+  const isShared = photoshoot.sharedWith.includes(userId);
+  const isAdmin = session.user.role === "ADMIN";
+  const isPublic = photoshoot.public;
+
+  if (!isOwner && !isShared && !isAdmin && !isPublic) {
+    return NextResponse.json(
+      { error: "Forbidden - no permissions" },
+      { status: 403 }
     );
   }
 

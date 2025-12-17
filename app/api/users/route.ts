@@ -5,7 +5,7 @@ import { CreatePhotoshootDTOZ, CreateUserDTOZ } from "@/lib/dtos";
 import { requireRole } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
-  const session = await requireRole(request, ["ADMIN"])
+  const session = await requireRole(request, ["ADMIN", "USER"])
   if (session instanceof NextResponse) return session
 
   try {

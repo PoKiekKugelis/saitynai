@@ -5,7 +5,7 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 
 export const metadata: Metadata = {
-  title: "PhotoGallery - Professional Photo Management",
+  title: "Fotografija",
   description: "Manage your photoshoots and photo collections professionally",
 };
 
@@ -29,7 +29,7 @@ export default function RootLayout({
             maxWidth: '1400px',
             width: '100%',
             margin: '0 auto',
-            padding: '2rem'
+            padding: '3rem 2rem 4rem'
           }}>
             {children}
           </main>

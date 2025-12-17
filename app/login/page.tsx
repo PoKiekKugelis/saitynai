@@ -30,7 +30,7 @@ export default function LoginPage() {
     });
 
     if (result?.error) {
-      setError("Invalid credentials. Please try again.");
+      setError("Neteisingi prisijungimo duomenys. Bandykite dar kartą.");
       setLoading(false);
     } else if (result?.ok) {
       router.push('/');
@@ -39,46 +39,30 @@ export default function LoginPage() {
 
   return (
     <div style={{
-      maxWidth: '450px',
+      maxWidth: '400px',
       margin: '0 auto',
-      padding: '2rem'
+      padding: '1.5rem'
     }}>
       {/* Card */}
       <div style={{
         background: 'var(--card-bg)',
-        padding: '2.5rem',
-        borderRadius: '1rem',
+        padding: '2rem',
+        borderRadius: '0.875rem',
         border: '1px solid var(--border)',
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
       }}>
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <div style={{
-            width: '64px',
-            height: '64px',
-            background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)',
-            borderRadius: '1rem',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 1rem'
-          }}>
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-              <polyline points="10 17 15 12 10 7"/>
-              <line x1="15" y1="12" x2="3" y2="12"/>
-            </svg>
-          </div>
+        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
           <h1 style={{
-            fontSize: '2rem',
-            marginBottom: '0.5rem',
+            fontSize: '1.625rem',
+            marginBottom: '0.375rem',
             color: 'var(--foreground)',
             fontWeight: '700'
           }}>
-            Welcome Back
+            Sveiki sugrįžę
           </h1>
-          <p style={{ color: '#64748b' }}>
-            Sign in to manage your photoshoots
+          <p style={{ color: '#64748b', fontSize: '0.875rem' }}>
+            Prisijunkite, kad valdytumėte savo fotosesijas
           </p>
         </div>
 
@@ -86,28 +70,28 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} style={{
           display: 'flex',
           flexDirection: 'column',
-          gap: '1.5rem'
+          gap: '1.25rem'
         }}>
           {/* Email Field */}
           <div>
             <label style={{
               display: 'block',
-              marginBottom: '0.5rem',
+              marginBottom: '0.375rem',
               fontWeight: '600',
               color: 'var(--foreground)',
-              fontSize: '0.875rem'
+              fontSize: '0.8125rem'
             }}>
-              Email Address
+              El. paštas
             </label>
             <div style={{ position: 'relative' }}>
               <div style={{
                 position: 'absolute',
-                left: '1rem',
+                left: '0.875rem',
                 top: '50%',
                 transform: 'translateY(-50%)',
                 color: '#94a3b8'
               }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                   <polyline points="22,6 12,13 2,6"/>
                 </svg>
@@ -116,13 +100,13 @@ export default function LoginPage() {
                 name="email"
                 type="email"
                 required
-                placeholder="you@example.com"
+                placeholder="vardas@pavyzdys.lt"
                 style={{
                   width: '100%',
-                  padding: '0.875rem 1rem 0.875rem 3rem',
+                  padding: '0.75rem 0.875rem 0.75rem 2.5rem',
                   border: '2px solid var(--border)',
                   borderRadius: '0.5rem',
-                  fontSize: '1rem',
+                  fontSize: '0.9375rem',
                   fontFamily: 'inherit'
                 }}
               />
@@ -133,22 +117,22 @@ export default function LoginPage() {
           <div>
             <label style={{
               display: 'block',
-              marginBottom: '0.5rem',
+              marginBottom: '0.375rem',
               fontWeight: '600',
               color: 'var(--foreground)',
-              fontSize: '0.875rem'
+              fontSize: '0.8125rem'
             }}>
-              Password
+              Slaptažodis
             </label>
             <div style={{ position: 'relative' }}>
               <div style={{
                 position: 'absolute',
-                left: '1rem',
+                left: '0.875rem',
                 top: '50%',
                 transform: 'translateY(-50%)',
                 color: '#94a3b8'
               }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                   <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                 </svg>
@@ -157,13 +141,13 @@ export default function LoginPage() {
                 name="password"
                 type="password"
                 required
-                placeholder="Enter your password"
+                placeholder="Įveskite slaptažodį"
                 style={{
                   width: '100%',
-                  padding: '0.875rem 1rem 0.875rem 3rem',
+                  padding: '0.75rem 0.875rem 0.75rem 2.5rem',
                   border: '2px solid var(--border)',
                   borderRadius: '0.5rem',
-                  fontSize: '1rem',
+                  fontSize: '0.9375rem',
                   fontFamily: 'inherit'
                 }}
               />
@@ -173,17 +157,17 @@ export default function LoginPage() {
           {/* Error Message */}
           {error && (
             <div style={{
-              padding: '0.875rem',
+              padding: '0.75rem',
               background: '#fee2e2',
               border: '1px solid #fecaca',
               borderRadius: '0.5rem',
               color: '#dc2626',
-              fontSize: '0.875rem',
+              fontSize: '0.8125rem',
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem'
             }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="10"/>
                 <line x1="12" y1="8" x2="12" y2="12"/>
                 <line x1="12" y1="16" x2="12.01" y2="16"/>
@@ -198,13 +182,13 @@ export default function LoginPage() {
             disabled={loading}
             style={{
               width: '100%',
-              padding: '1rem',
-              background: loading ? '#94a3b8' : 'var(--primary)',
+              padding: '0.875rem',
+              background: loading ? '#94a3b8' : '#1e293b',
               color: 'white',
               border: 'none',
               borderRadius: '0.5rem',
               fontWeight: '600',
-              fontSize: '1rem',
+              fontSize: '0.9375rem',
               cursor: loading ? 'not-allowed' : 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -215,23 +199,23 @@ export default function LoginPage() {
             {loading ? (
               <>
                 <div style={{
-                  width: '20px',
-                  height: '20px',
+                  width: '18px',
+                  height: '18px',
                   border: '2px solid white',
                   borderTop: '2px solid transparent',
                   borderRadius: '50%',
                   animation: 'spin 1s linear infinite'
                 }} />
-                Signing in...
+                Prisijungiama...
               </>
             ) : (
               <>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
                   <polyline points="10 17 15 12 10 7"/>
                   <line x1="15" y1="12" x2="3" y2="12"/>
                 </svg>
-                Sign In
+                Prisijungti
               </>
             )}
           </button>
@@ -239,45 +223,25 @@ export default function LoginPage() {
 
         {/* Footer */}
         <div style={{
-          marginTop: '1.5rem',
-          paddingTop: '1.5rem',
+          marginTop: '1.25rem',
+          paddingTop: '1.25rem',
           borderTop: '1px solid var(--border)',
           textAlign: 'center',
           display: 'flex',
           flexDirection: 'column',
-          gap: '0.75rem'
+          gap: '0.625rem'
         }}>
-          <p style={{ color: '#64748b', fontSize: '0.875rem' }}>
-            Don't have an account?{' '}
+          <p style={{ color: '#64748b', fontSize: '0.8125rem' }}>
+            Neturite paskyros?{' '}
             <Link href="/register" style={{
-              color: 'var(--primary)',
+              color: '#1e293b',
               fontWeight: '600',
               textDecoration: 'none'
             }}>
-              Sign up
+              Registruotis
             </Link>
           </p>
-          <p style={{ color: '#94a3b8', fontSize: '0.75rem', borderTop: '1px solid var(--border)', paddingTop: '0.75rem' }}>
-            Demo credentials: admin@example.com / admin123
-          </p>
         </div>
-      </div>
-
-      {/* Back to Home */}
-      <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
-        <Link href="/" style={{
-          color: 'var(--primary)',
-          textDecoration: 'none',
-          fontWeight: '600',
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '0.5rem'
-        }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="15 18 9 12 15 6"/>
-          </svg>
-          Back to Home
-        </Link>
       </div>
     </div>
   );

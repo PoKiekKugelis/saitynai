@@ -6,15 +6,44 @@ import { requireRole } from "@/lib/auth";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ photoshootId: string }> }) {
   try {
-    const session = await requireRole(request, ["ADMIN", "USER"])
-    if (session instanceof NextResponse) return session
-
     const { photoshootId } = await params;
     const id = parseInt(photoshootId);
 
-    const errorResponse = await ErrorCheck(id, session);
-    if (errorResponse) {
-      return errorResponse;
+    if (isNaN(id)) {
+      return NextResponse.json(
+        { error: "Invalid photoshoot ID" },
+        { status: 400 }
+      );
+    }
+
+    const photoshoot = await prisma.photoshoot.findUnique({
+      where: { id }
+    });
+
+    if (!photoshoot) {
+      return NextResponse.json(
+        { error: "Photoshoot not found" },
+        { status: 404 }
+      );
+    }
+
+    // Check if photoshoot is public
+    if (!photoshoot.public) {
+      // If not public, require authentication
+      const session = await requireRole(request, ["ADMIN", "USER"])
+      if (session instanceof NextResponse) return session
+
+      const userId = parseInt(session.user.id);
+      const isOwner = photoshoot.ownerId === userId;
+      const isShared = photoshoot.sharedWith.includes(userId);
+      const isAdmin = session.user.role === "ADMIN";
+
+      if (!isOwner && !isShared && !isAdmin) {
+        return NextResponse.json(
+          { error: "Forbidden - no permissions" },
+          { status: 403 }
+        );
+      }
     }
 
     const photos = await prisma.photo.findMany({
@@ -34,7 +63,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 }
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ photoshootId: string }> }) {
-  const session = await requireRole(request, ["ADMIN"])
+  const session = await requireRole(request, ["ADMIN", "USER"])
   if (session instanceof NextResponse) return session
 
   try {
@@ -87,10 +116,11 @@ export async function ErrorCheck(id: number, session: { user: { id: string; role
       { status: 404 }
     );
   }
-
-  if (photoshoot.ownerId?.toString() != session.user.id && session.user.role !== "ADMIN") {
+  
+  // Only owner or admin can modify (POST new photos)
+  if (photoshoot.ownerId?.toString() != session.user.id && session.user.role !== "ADMIN") { 
     return NextResponse.json(
-      { error: "Forbidden - no permissions" },
+      { error: "Forbidden - only owner can add photos" },
       { status: 403 }
     );
   }
