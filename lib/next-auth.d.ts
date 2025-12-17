@@ -14,7 +14,7 @@ declare module "next-auth" {
       email: string
       role: string
     }
-    refreshToken?: string
+    refreshToken?: string | null
   }
 }
 

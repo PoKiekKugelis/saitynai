@@ -52,14 +52,12 @@ export function createPhotoshootDTOToPrisma(dto: CreatePhotoshootDTO) {
 }
 
 export function updatePhotoshootDTOToPrisma(dto: UpdatePhotoshootDTO) {
-  const updateData: Record<string, string | Date | number | null> = {};
-
-  if (dto.title !== undefined) updateData.title = dto.title;
-  if (dto.description !== undefined) updateData.description = dto.description;
-  if (dto.date !== undefined) updateData.date = dto.date ? new Date(dto.date) : null;
-  if (dto.ownerId !== undefined) updateData.ownerId = dto.ownerId;
-
-  return updateData;
+  return {
+    title: dto.title,
+    description: dto.description,
+    date: dto.date,
+    ownerId: dto.ownerId,
+  };
 }
 
 export function createPhotoDTOToPrisma(dto: CreatePhotoDTO, photoshootId: string) {

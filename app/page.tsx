@@ -1,103 +1,248 @@
-import Image from "next/image";
+import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <>
+    <div style={{ width: '100%' }}>
+      {/* Hero Section */}
+      <section style={{
+        textAlign: 'center',
+        padding: '4rem 2rem',
+        background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)',
+        borderRadius: '1rem',
+        color: 'white',
+        marginBottom: '3rem'
+      }}>
+        <h1 style={{
+          fontSize: 'clamp(2.5rem, 5vw, 4rem)',
+          marginBottom: '1rem',
+          fontWeight: '700',
+          lineHeight: '1.2'
+        }}>
+          Welcome to PhotoGallery
+        </h1>
+        <p style={{
+          fontSize: 'clamp(1rem, 2vw, 1.25rem)',
+          marginBottom: '2rem',
+          opacity: 0.95,
+          maxWidth: '600px',
+          margin: '0 auto 2rem'
+        }}>
+          Organize, manage, and showcase your photoshoots with professional-grade tools
+        </p>
+        <Link
+          href="/photoshoots"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            background: 'white',
+            color: 'var(--primary)',
+            padding: '1rem 2rem',
+            borderRadius: '0.75rem',
+            textDecoration: 'none',
+            fontWeight: '600',
+            fontSize: '1.125rem',
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+          }}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+          </svg>
+          View Photoshoots
+        </Link>
+      </section>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      {/* Features Section */}
+      <section>
+        <h2 style={{
+          fontSize: '2.5rem',
+          marginBottom: '2rem',
+          textAlign: 'center',
+          color: 'var(--foreground)'
+        }}>
+          Key Features
+        </h2>
+        <div className="grid-container">
+          <div className="card" style={{
+            background: 'var(--card-bg)',
+            padding: '2rem',
+            borderRadius: '1rem',
+            border: '1px solid var(--border)'
+          }}>
+            <div style={{
+              background: 'var(--primary)',
+              width: '60px',
+              height: '60px',
+              borderRadius: '1rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: '1rem'
+            }}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+              </svg>
+            </div>
+            <h3 style={{
+              fontSize: '1.5rem',
+              marginBottom: '0.75rem',
+              color: 'var(--foreground)'
+            }}>
+              Organize Photoshoots
+            </h3>
+            <p style={{
+              color: '#64748b',
+              lineHeight: '1.6'
+            }}>
+              Create and manage multiple photoshoots with custom details, dates, and locations.
+            </p>
+          </div>
+
+          <div className="card" style={{
+            background: 'var(--card-bg)',
+            padding: '2rem',
+            borderRadius: '1rem',
+            border: '1px solid var(--border)'
+          }}>
+            <div style={{
+              background: 'var(--secondary)',
+              width: '60px',
+              height: '60px',
+              borderRadius: '1rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: '1rem'
+            }}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+            </div>
+            <h3 style={{
+              fontSize: '1.5rem',
+              marginBottom: '0.75rem',
+              color: 'var(--foreground)'
+            }}>
+              Photo Management
+            </h3>
+            <p style={{
+              color: '#64748b',
+              lineHeight: '1.6'
+            }}>
+              Upload, categorize, and manage your photos with an intuitive interface.
+            </p>
+          </div>
+
+          <div className="card" style={{
+            background: 'var(--card-bg)',
+            padding: '2rem',
+            borderRadius: '1rem',
+            border: '1px solid var(--border)'
+          }}>
+            <div style={{
+              background: 'var(--accent)',
+              width: '60px',
+              height: '60px',
+              borderRadius: '1rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: '1rem'
+            }}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+            </div>
+            <h3 style={{
+              fontSize: '1.5rem',
+              marginBottom: '0.75rem',
+              color: 'var(--foreground)'
+            }}>
+              Collaboration
+            </h3>
+            <p style={{
+              color: '#64748b',
+              lineHeight: '1.6'
+            }}>
+              Add comments and feedback to photos for seamless team collaboration.
+            </p>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </section>
+
+      {/* CTA Section */}
+      <section style={{
+        marginTop: '4rem',
+        padding: '3rem',
+        background: 'var(--card-bg)',
+        borderRadius: '1rem',
+        textAlign: 'center',
+        border: '2px solid var(--border)'
+      }}>
+        <h2 style={{
+          fontSize: '2rem',
+          marginBottom: '1rem',
+          color: 'var(--foreground)'
+        }}>
+          Ready to Get Started?
+        </h2>
+        <p style={{
+          color: '#64748b',
+          marginBottom: '2rem',
+          fontSize: '1.125rem'
+        }}>
+          Join professional photographers managing their work efficiently
+        </p>
+        <div style={{
+          display: 'flex',
+          gap: '1rem',
+          justifyContent: 'center',
+          flexWrap: 'wrap'
+        }}>
+          <Link
+            href="/login"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              background: 'var(--primary)',
+              color: 'white',
+              padding: '0.875rem 1.75rem',
+              borderRadius: '0.5rem',
+              textDecoration: 'none',
+              fontWeight: '600'
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+              <polyline points="10 17 15 12 10 7"/>
+              <line x1="15" y1="12" x2="3" y2="12"/>
+            </svg>
+            Sign In
+          </Link>
+          <Link
+            href="/photoshoots"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              background: 'white',
+              color: 'var(--primary)',
+              padding: '0.875rem 1.75rem',
+              borderRadius: '0.5rem',
+              textDecoration: 'none',
+              fontWeight: '600',
+              border: '2px solid var(--primary)'
+            }}
+          >
+            Browse Gallery
+          </Link>
+        </div>
+      </section>
     </div>
+    </>
   );
 }

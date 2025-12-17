@@ -47,7 +47,7 @@ export const authOptions: NextAuthOptions = {
           id: user.id.toString(),
           email: user.email,
           role: user.role,
-          refreshToken,
+          refreshToken: refreshToken,
         }
       },
     }),
@@ -63,12 +63,9 @@ export const authOptions: NextAuthOptions = {
       const now = Math.floor(Date.now() / 1000);
       const expiry = now + (maxAge ?? 60);
 
-      const cleanToken = Object.fromEntries(
-        Object.entries(token).filter(([key, v]) => key !== 'refreshToken' && v !== undefined)
-      );
 
       const payload = {
-        ...cleanToken,
+        ...token,
         iat: (token.iat as number) ?? now,
         exp: (token.exp as number) ?? expiry,
       };
@@ -97,7 +94,6 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id
         token.role = user.role
-        token.refreshToken = user.refreshToken
       }
       return token
     },
@@ -105,7 +101,11 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.id as string
         session.user.role = token.role as string
-        session.refreshToken = token.refreshToken
+        const user = await prisma.user.findUnique({
+          where: { id: Number(token.id) },
+          select: { refreshToken: true }
+        })
+        session.refreshToken = user?.refreshToken
       }
       return session
     }

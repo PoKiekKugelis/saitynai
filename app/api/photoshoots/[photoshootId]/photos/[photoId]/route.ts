@@ -72,6 +72,7 @@ export async function PUT(
         { status: 400 }
       );
     }
+    
 
     const photo = await prisma.photo.findUnique({
       where: { id },
@@ -85,6 +86,7 @@ export async function PUT(
     }
 
     const body = await request.json();
+    
     const validationResult = UpdatePhotoDTOZ.safeParse(body);
     if (!validationResult.success) {
       return NextResponse.json(

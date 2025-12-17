@@ -63,6 +63,7 @@ export async function requireRole(req: NextRequest, allowedRoles: string[]) {
       id: token.id as string,
       email: token.email as string,
       role: userRole,
+      refreshToken: token.refreshToken
     },
   }
 }

@@ -68,3 +68,17 @@ export const UpdateCommentDTOZ = z.object({
 });
 
 export type UpdateCommentDTO = z.infer<typeof UpdateCommentDTOZ>;
+
+export const CreateUserDTOZ = z.object({
+  email: z.email().max(50).trim(),
+  password: z.string().min(4).max(30).trim()
+});
+
+export const UpdateUserDTOZ = z.object({
+  email: z.email().max(50).trim(),
+  password: z.string().min(4).max(30).trim(),
+});
+
+export type CreateUserDTO = z.infer<typeof CreatePhotoshootDTOZ>;
+export type UpdateUserDTO = z.infer<typeof UpdatePhotoshootDTOZ>;
+
