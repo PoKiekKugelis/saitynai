@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     const validationResult = CreatePhotoshootDTOZ.safeParse(body);
     if (!validationResult.success) {
       return NextResponse.json(
-        { error: "Invalid input", details: validationResult.error.issues },
+        { error: "Neteisinga įvestis", details: validationResult.error.issues },
         { status: 422 }
       );
     }

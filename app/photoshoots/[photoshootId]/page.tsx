@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import Modal from '../../components/Modal' 
+import Modal from '../../components/Modal'
+import { set } from 'zod'
 
 interface Photo {
   id: number
@@ -71,6 +72,7 @@ export default function PhotoshootDetailPage() {
   const [users, setUsers] = useState<User[]>([])
   const [shareModalOpen, setShareModalOpen] = useState(false)
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([])
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (photoshootId) {
@@ -195,6 +197,7 @@ export default function PhotoshootDetailPage() {
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!session || !selectedPhoto) return
+    setError("");
 
     try {
       const response = await fetch(
@@ -205,6 +208,12 @@ export default function PhotoshootDetailPage() {
           body: JSON.stringify({ body: commentText })
         }
       )
+      const result = await response.json()
+      if (!response.ok) {
+        console.log(response)
+        setError(result.error)
+        return;
+      }
 
       if (response.ok) {
         setCommentText('')
@@ -231,7 +240,7 @@ export default function PhotoshootDetailPage() {
     } else if (direction === 'prev' && selectedPhotoIndex > 0) {
       newIndex = selectedPhotoIndex - 1
     }
-    
+
     const newPhoto = photos[newIndex]
     if (newPhoto) {
       setSelectedPhoto(newPhoto)
@@ -244,6 +253,7 @@ export default function PhotoshootDetailPage() {
 
   const handleEditComment = async (commentId: number) => {
     if (!editCommentText.trim()) return
+    setError("");
 
     try {
       const response = await fetch(
@@ -254,6 +264,12 @@ export default function PhotoshootDetailPage() {
           body: JSON.stringify({ body: editCommentText })
         }
       )
+      const result = await response.json()
+      if (!response.ok) {
+        console.log(response)
+        setError(result.error)
+        return;
+      }
 
       if (response.ok) {
         setEditingCommentId(null)
@@ -296,7 +312,7 @@ export default function PhotoshootDetailPage() {
 
   const handleEditPhotoshootSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     try {
       const dateWithTime = editPhotoshootData.date ? `${editPhotoshootData.date}T10:00:00Z` : null
 
@@ -311,6 +327,12 @@ export default function PhotoshootDetailPage() {
         })
       })
 
+      const result = await response.json()
+      if (!response.ok) {
+        console.log(response)
+        setError(result.error)
+        return;
+      }
       if (response.ok) {
         setEditPhotoshootModalOpen(false)
         fetchPhotoshoot()
@@ -328,8 +350,8 @@ export default function PhotoshootDetailPage() {
   }
 
   const toggleUserSelection = (userId: number) => {
-    setSelectedUserIds(prev => 
-      prev.includes(userId) 
+    setSelectedUserIds(prev =>
+      prev.includes(userId)
         ? prev.filter(id => id !== userId)
         : [...prev, userId]
     )
@@ -337,7 +359,7 @@ export default function PhotoshootDetailPage() {
 
   const handleShareSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     try {
       const response = await fetch(`/api/photoshoots/${photoshootId}`, {
         method: 'PUT',
@@ -451,7 +473,7 @@ export default function PhotoshootDetailPage() {
         }}
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <polyline points="15 18 9 12 15 6"/>
+          <polyline points="15 18 9 12 15 6" />
         </svg>
         Grįžti į fotosesijų sąrašą
       </button>
@@ -486,10 +508,10 @@ export default function PhotoshootDetailPage() {
             }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
             </svg>
-            Edit
+            Redaguoti
           </button>
         )}
         <h1 style={{
@@ -519,10 +541,10 @@ export default function PhotoshootDetailPage() {
           color: '#64748b'
         }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-            <line x1="16" y1="2" x2="16" y2="6"/>
-            <line x1="8" y1="2" x2="8" y2="6"/>
-            <line x1="3" y1="10" x2="21" y2="10"/>
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+            <line x1="16" y1="2" x2="16" y2="6" />
+            <line x1="8" y1="2" x2="8" y2="6" />
+            <line x1="3" y1="10" x2="21" y2="10" />
           </svg>
           {new Date(photoshoot.date).toLocaleDateString('lt-LT', { year: 'numeric', month: 'short', day: 'numeric' })}
         </div>
@@ -542,7 +564,7 @@ export default function PhotoshootDetailPage() {
           fontWeight: '600',
           color: 'var(--foreground)'
         }}>
-          Photos ({photos.length})
+          Nuotraukos ({photos.length})
         </h2>
         {session?.user?.id && photoshoot.ownerId === parseInt(session.user.id) && (
           <button
@@ -563,8 +585,8 @@ export default function PhotoshootDetailPage() {
             }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="12" y1="5" x2="12" y2="19"/>
-              <line x1="5" y1="12" x2="19" y2="12"/>
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
             Add Photo
           </button>
@@ -589,15 +611,15 @@ export default function PhotoshootDetailPage() {
             strokeWidth="2"
             style={{ margin: '0 auto 0.875rem' }}
           >
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-            <circle cx="8.5" cy="8.5" r="1.5"/>
-            <polyline points="21 15 16 10 5 21"/>
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+            <circle cx="8.5" cy="8.5" r="1.5" />
+            <polyline points="21 15 16 10 5 21" />
           </svg>
           <h3 style={{ fontSize: '1.125rem', marginBottom: '0.375rem', fontWeight: '600' }}>
-            No photos yet
+            Dar nėra nuotraukų
           </h3>
           <p style={{ color: '#64748b', marginBottom: '1.25rem', fontSize: '0.875rem' }}>
-            Add your first photo to this photoshoot
+            Pridėkite pirmąją nuotrauką į šią fotosesiją
           </p>
           {session && (
             <button
@@ -613,7 +635,7 @@ export default function PhotoshootDetailPage() {
                 cursor: 'pointer'
               }}
             >
-              Add Photo
+              Pridėti nuotrauką
             </button>
           )}
         </div>
@@ -632,7 +654,7 @@ export default function PhotoshootDetailPage() {
               }}
             >
               {/* Photo Image */}
-              <div 
+              <div
                 style={{
                   background: '#e2e8f0',
                   height: '200px',
@@ -656,39 +678,12 @@ export default function PhotoshootDetailPage() {
                   />
                 ) : (
                   <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                    <circle cx="8.5" cy="8.5" r="1.5"/>
-                    <polyline points="21 15 16 10 5 21"/>
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <polyline points="21 15 16 10 5 21" />
                   </svg>
                 )}
-                
-                {/* Maximize button (bottom-left) */}
-                <div style={{
-                  position: 'absolute',
-                  bottom: '0.5rem',
-                  left: '0.5rem'
-                }}>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openPhotoViewer(photo, index);
-                    }}
-                    style={{
-                      background: 'rgba(30,41,59,0.9)',
-                      border: 'none',
-                      padding: '0.375rem',
-                      borderRadius: '0.25rem',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center'
-                    }}
-                    title="Maximize photo"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                      <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
-                    </svg>
-                  </button>
-                </div>
+
 
                 {/* Edit/Delete buttons for owner */}
                 {session?.user?.id && photoshoot.ownerId === parseInt(session.user.id) && (
@@ -713,11 +708,11 @@ export default function PhotoshootDetailPage() {
                         display: 'flex',
                         alignItems: 'center'
                       }}
-                      title="Edit photo"
+                      title="Redaguoti nuotrauką"
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                       </svg>
                     </button>
                     <button
@@ -734,11 +729,11 @@ export default function PhotoshootDetailPage() {
                         display: 'flex',
                         alignItems: 'center'
                       }}
-                      title="Delete photo"
+                      title="Ištrinti nuotrauką"
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                        <polyline points="3 6 5 6 21 6"/>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                       </svg>
                     </button>
                   </div>
@@ -767,7 +762,7 @@ export default function PhotoshootDetailPage() {
       <Modal
         isOpen={photoModalOpen}
         onClose={() => setPhotoModalOpen(false)}
-        title="Add New Photo"
+        title="Pridėti naują nuotrauką"
       >
         <form onSubmit={handlePhotoSubmit} style={{
           display: 'flex',
@@ -784,7 +779,7 @@ export default function PhotoshootDetailPage() {
               fontSize: '0.8125rem',
               color: 'var(--foreground)'
             }}>
-              Photos *
+              Nuotraukos *
             </label>
             <input
               type="file"
@@ -870,7 +865,7 @@ export default function PhotoshootDetailPage() {
               fontSize: '0.8125rem',
               color: 'var(--foreground)'
             }}>
-              Caption
+              Antraštė
             </label>
             <textarea
               value={caption}
@@ -884,7 +879,7 @@ export default function PhotoshootDetailPage() {
                 fontSize: '0.875rem',
                 resize: 'vertical'
               }}
-              placeholder="Add a caption for these photos..."
+              placeholder="Pridėkite antraštę šioms nuotraukoms..."
             />
           </div>
 
@@ -912,7 +907,7 @@ export default function PhotoshootDetailPage() {
                 cursor: 'pointer'
               }}
             >
-              Cancel
+              Atšaukti
             </button>
             <button
               type="submit"
@@ -928,7 +923,7 @@ export default function PhotoshootDetailPage() {
                 cursor: uploading || selectedFiles.length === 0 ? 'not-allowed' : 'pointer'
               }}
             >
-              {uploading ? 'Uploading...' : `Add Photo${selectedFiles.length > 1 ? 's' : ''}`}
+              {uploading ? 'Pridedama...' : selectedFiles.length > 1 ? `Pridėti nuotraukas` : 'Pridėti nuotrauką'}
             </button>
           </div>
         </form>
@@ -938,7 +933,7 @@ export default function PhotoshootDetailPage() {
       <Modal
         isOpen={viewModalOpen}
         onClose={() => setViewModalOpen(false)}
-        title={selectedPhoto?.caption || 'Photo'}
+        title={selectedPhoto?.caption || 'Nuotrauka'}
       >
         {selectedPhoto && (
           <div style={{ maxWidth: '800px' }}>
@@ -967,13 +962,13 @@ export default function PhotoshootDetailPage() {
                   marginBottom: '1rem'
                 }}>
                   <svg width="96" height="96" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                    <circle cx="8.5" cy="8.5" r="1.5"/>
-                    <polyline points="21 15 16 10 5 21"/>
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <polyline points="21 15 16 10 5 21" />
                   </svg>
                 </div>
               )}
-              
+
               {/* Navigation Buttons */}
               {selectedPhotoIndex > 0 && (
                 <button
@@ -996,7 +991,7 @@ export default function PhotoshootDetailPage() {
                   }}
                 >
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="15 18 9 12 15 6"/>
+                    <polyline points="15 18 9 12 15 6" />
                   </svg>
                 </button>
               )}
@@ -1021,12 +1016,12 @@ export default function PhotoshootDetailPage() {
                   }}
                 >
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="9 18 15 12 9 6"/>
+                    <polyline points="9 18 15 12 9 6" />
                   </svg>
                 </button>
               )}
             </div>
-            
+
             {selectedPhoto.caption && (
               <p style={{ color: '#64748b', lineHeight: '1.6', marginBottom: '1.5rem' }}>
                 {selectedPhoto.caption}
@@ -1040,178 +1035,184 @@ export default function PhotoshootDetailPage() {
                 paddingTop: '1.5rem'
               }}>
                 <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem', fontWeight: '600' }}>
-                  Comments ({comments.length})
+                  Komentarai ({comments.length})
                 </h3>
-              
-              {/* Comments List */}
-              <div style={{
-                maxHeight: '250px',
-                overflowY: 'auto',
-                marginBottom: '1.5rem'
-              }}>
-                {comments.length === 0 ? (
-                  <p style={{ color: '#64748b', textAlign: 'center', padding: '2rem' }}>
-                    No comments yet. Be the first to comment!
-                  </p>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    {comments.map((comment) => (
-                      <div key={comment.id} style={{
-                        padding: '1rem',
-                        background: 'var(--card-bg)',
-                        borderRadius: '0.5rem',
-                        border: '1px solid var(--border)'
-                      }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <span style={{ fontWeight: '600', color: '#667eea', fontSize: '0.875rem' }}>
-                              {comment.authorUsername || `User #${comment.authorId}`}
-                            </span>
-                          </div>
-                          
-                          {session?.user?.id && comment.authorId === parseInt(session.user.id) && (
-                            <div style={{ display: 'flex', gap: '0.5rem' }}>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setEditingCommentId(comment.id);
-                                  setEditCommentText(comment.body);
-                                }}
-                                style={{
-                                  background: 'none',
-                                  border: '1px solid #cbd5e1',
-                                  padding: '0.25rem 0.5rem',
-                                  borderRadius: '0.375rem',
-                                  cursor: 'pointer',
-                                  color: '#475569',
-                                  fontSize: '0.75rem'
-                                }}
-                              >
-                                Edit
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteComment(comment.id)}
-                                style={{
-                                  background: 'none',
-                                  border: '1px solid #ef4444',
-                                  padding: '0.25rem 0.5rem',
-                                  borderRadius: '0.375rem',
-                                  cursor: 'pointer',
-                                  color: '#ef4444',
-                                  fontSize: '0.75rem'
-                                }}
-                              >
-                                Delete
-                              </button>
+
+                {/* Comments List */}
+                <div style={{
+                  maxHeight: '250px',
+                  overflowY: 'auto',
+                  marginBottom: '1.5rem'
+                }}>
+                  {comments.length === 0 ? (
+                    <p style={{ color: '#64748b', textAlign: 'center', padding: '2rem' }}>
+                      Dar nėra komentarų. Būkite pirmi, kurie parašysite!
+                    </p>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      {comments.map((comment) => (
+                        <div key={comment.id} style={{
+                          padding: '1rem',
+                          background: 'var(--card-bg)',
+                          borderRadius: '0.5rem',
+                          border: '1px solid var(--border)'
+                        }}>
+
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <span style={{ fontWeight: '600', color: '#667eea', fontSize: '0.875rem' }}>
+                                {comment.authorUsername || `User #${comment.authorId}`}
+                              </span>
                             </div>
-                          )}
-                        </div>
-                        
-                        {editingCommentId === comment.id ? (
-                          <div>
-                            <textarea
-                              value={editCommentText}
-                              onChange={(e) => setEditCommentText(e.target.value)}
-                              style={{
-                                width: '100%',
-                                padding: '0.75rem',
-                                borderRadius: '0.5rem',
-                                border: '1px solid var(--border)',
-                                fontSize: '0.875rem',
-                                marginBottom: '0.5rem',
-                                minHeight: '80px',
-                                resize: 'vertical',
-                                background: 'white'
-                              }}
-                            />
-                            <div style={{ display: 'flex', gap: '0.5rem' }}>
-                              <button
-                                type="button"
-                                onClick={() => handleEditComment(comment.id)}
+
+                            {session?.user?.id && comment.authorId === parseInt(session.user.id) && (
+                              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingCommentId(comment.id);
+                                    setEditCommentText(comment.body);
+                                    setError("");1
+                                  }}
+                                  style={{
+                                    background: 'none',
+                                    border: '1px solid #cbd5e1',
+                                    padding: '0.25rem 0.5rem',
+                                    borderRadius: '0.375rem',
+                                    cursor: 'pointer',
+                                    color: '#475569',
+                                    fontSize: '0.75rem'
+                                  }}
+                                >
+                                  Redaguoti
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteComment(comment.id)}
+                                  style={{
+                                    background: 'none',
+                                    border: '1px solid #ef4444',
+                                    padding: '0.25rem 0.5rem',
+                                    borderRadius: '0.375rem',
+                                    cursor: 'pointer',
+                                    color: '#ef4444',
+                                    fontSize: '0.75rem'
+                                  }}
+                                >
+                                  Ištrinti
+                                </button>
+                              </div>
+                            )}
+                          </div>
+
+                          {editingCommentId === comment.id ? (
+                            <div>
+                              {error && (<div className="text-red-500 text-sm text-center">{error}</div>)}
+                              <textarea
+                                value={editCommentText}
+                                onChange={(e) => setEditCommentText(e.target.value)}
                                 style={{
-                                  padding: '0.5rem 1rem',
-                                  borderRadius: '0.5rem',
-                                  border: 'none',
-                                  background: '#667eea',
-                                  color: 'white',
-                                  cursor: 'pointer',
-                                  fontSize: '0.875rem'
-                                }}
-                              >
-                                Save
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setEditingCommentId(null);
-                                  setEditCommentText('');
-                                }}
-                                style={{
-                                  padding: '0.5rem 1rem',
+                                  width: '100%',
+                                  padding: '0.75rem',
                                   borderRadius: '0.5rem',
                                   border: '1px solid var(--border)',
-                                  background: 'white',
-                                  color: '#475569',
-                                  cursor: 'pointer',
-                                  fontSize: '0.875rem'
+                                  fontSize: '0.875rem',
+                                  marginBottom: '0.5rem',
+                                  minHeight: '80px',
+                                  resize: 'vertical',
+                                  background: 'white'
                                 }}
-                              >
-                                Cancel
-                              </button>
+                              />
+                              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                <button
+                                  type="button"
+                                  onClick={() => handleEditComment(comment.id)}
+                                  style={{
+                                    padding: '0.5rem 1rem',
+                                    borderRadius: '0.5rem',
+                                    border: 'none',
+                                    background: '#1e293b',
+                                    color: 'white',
+                                    cursor: 'pointer',
+                                    fontSize: '0.875rem'
+                                  }}
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingCommentId(null);
+                                    setEditCommentText('');
+                                  }}
+                                  style={{
+                                    padding: '0.5rem 1rem',
+                                    borderRadius: '0.5rem',
+                                    border: '1px solid var(--border)',
+                                    background: 'white',
+                                    color: '#475569',
+                                    cursor: 'pointer',
+                                    fontSize: '0.875rem'
+                                  }}
+                                >
+                                  Cancel
+                                </button>
+                              </div>
                             </div>
-                          </div>
-                        ) : (
-                          <p style={{ marginBottom: '0', lineHeight: '1.5', color: '#334155' }}>
-                            {comment.body}
-                          </p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                          ) : (
+                            <p style={{ marginBottom: '0', lineHeight: '1.5', color: '#334155' }}>
+                              {comment.body}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Add Comment Form */}
+                {session && (
+                  <form onSubmit={handleCommentSubmit} style={{
+                    paddingTop: '1rem',
+                    borderTop: '1px solid var(--border)'
+                  }}>
+                    {error && (
+                      <div className="text-red-500 text-sm text-center">{error}</div>
+                    )}
+                    <textarea
+                      value={commentText}
+                      onChange={(e) => setCommentText(e.target.value)}
+                      required
+                      rows={3}
+                      placeholder="Parašykite komentarą..."
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '2px solid var(--border)',
+                        borderRadius: '0.5rem',
+                        fontSize: '1rem',
+                        marginBottom: '1rem',
+                        resize: 'vertical'
+                      }}
+                    />
+                    <button
+                      type="submit"
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        background: '#1e293b',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '0.5rem',
+                        fontWeight: '600',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Paskelbti komentarą
+                    </button>
+                  </form>
                 )}
               </div>
-
-              {/* Add Comment Form */}
-              {session && (
-                <form onSubmit={handleCommentSubmit} style={{
-                  paddingTop: '1rem',
-                  borderTop: '1px solid var(--border)'
-                }}>
-                  <textarea
-                    value={commentText}
-                    onChange={(e) => setCommentText(e.target.value)}
-                    required
-                    rows={3}
-                    placeholder="Write a comment..."
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      border: '2px solid var(--border)',
-                      borderRadius: '0.5rem',
-                      fontSize: '1rem',
-                      marginBottom: '1rem',
-                      resize: 'vertical'
-                    }}
-                  />
-                  <button
-                    type="submit"
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      background: '#1e293b',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '0.5rem',
-                      fontWeight: '600',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    Post Comment
-                  </button>
-                </form>
-              )}
-            </div>
             )}
           </div>
         )}
@@ -1221,7 +1222,7 @@ export default function PhotoshootDetailPage() {
       <Modal
         isOpen={editPhotoshootModalOpen}
         onClose={() => setEditPhotoshootModalOpen(false)}
-        title="Edit Photoshoot"
+        title="Redaguoti fotosesiją"
       >
         <form onSubmit={handleEditPhotoshootSubmit} style={{
           display: 'flex',
@@ -1238,7 +1239,7 @@ export default function PhotoshootDetailPage() {
               fontSize: '0.8125rem',
               color: 'var(--foreground)'
             }}>
-              Title *
+              Pavadinimas *
             </label>
             <input
               type="text"
@@ -1263,7 +1264,7 @@ export default function PhotoshootDetailPage() {
               fontSize: '0.8125rem',
               color: 'var(--foreground)'
             }}>
-              Description
+              Aprašymas
             </label>
             <textarea
               value={editPhotoshootData.description}
@@ -1288,7 +1289,7 @@ export default function PhotoshootDetailPage() {
               fontSize: '0.8125rem',
               color: 'var(--foreground)'
             }}>
-              Date
+              Data
             </label>
             <input
               type="date"
@@ -1326,12 +1327,12 @@ export default function PhotoshootDetailPage() {
               <span style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.875rem' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   {editPhotoshootData.public ? (
-                    <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>
+                    <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></>
                   ) : (
-                    <><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></>
+                    <><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></>
                   )}
                 </svg>
-                Make photoshoot public
+                Padaryti fotosesiją viešą
               </span>
             </label>
             <p style={{
@@ -1340,7 +1341,7 @@ export default function PhotoshootDetailPage() {
               marginTop: '0.375rem',
               marginLeft: '1.5rem'
             }}>
-              {editPhotoshootData.public ? 'Anyone can view this photoshoot' : 'Only you and shared users can view this photoshoot'}
+              {editPhotoshootData.public ? 'Bet kas gali peržiūrėti šią fotosesiją' : 'Tik jūs ir bendrinami vartotojai gali peržiūrėti šią fotosesiją'}
             </p>
           </div>
 
@@ -1368,12 +1369,13 @@ export default function PhotoshootDetailPage() {
               }}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
-                <polyline points="16 6 12 2 8 6"/>
-                <line x1="12" y1="2" x2="12" y2="15"/>
+                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                <polyline points="16 6 12 2 8 6" />
+                <line x1="12" y1="2" x2="12" y2="15" />
               </svg>
-              Share with Users
+              Bendrinti su naudotojais
             </button>
+            {error && (<div className="text-red-500 text-sm text-center">{error}</div>)}
 
             <div style={{ display: 'flex', gap: '0.875rem' }}>
               <button
@@ -1390,7 +1392,7 @@ export default function PhotoshootDetailPage() {
                   cursor: 'pointer'
                 }}
               >
-                Save Changes
+                Išsaugoti pakeitimus
               </button>
               <button
                 type="button"
@@ -1407,7 +1409,7 @@ export default function PhotoshootDetailPage() {
                   cursor: 'pointer'
                 }}
               >
-                Cancel
+                Atšaukti
               </button>
             </div>
           </div>
@@ -1421,7 +1423,7 @@ export default function PhotoshootDetailPage() {
           setEditPhotoModalOpen(false);
           setEditingPhoto(null);
         }}
-        title="Edit Photo"
+        title="Redaguoti nuotrauką"
       >
         <form onSubmit={handleEditPhotoSubmit} style={{
           display: 'flex',
@@ -1438,13 +1440,13 @@ export default function PhotoshootDetailPage() {
               fontSize: '0.8125rem',
               color: 'var(--foreground)'
             }}>
-              Caption
+              Antraštė
             </label>
             <textarea
               value={editPhotoCaption}
               onChange={(e) => setEditPhotoCaption(e.target.value)}
               rows={3}
-              placeholder="Add a caption..."
+              placeholder="Pridėti antraštę..."
               style={{
                 width: '100%',
                 padding: '0.625rem',
@@ -1471,7 +1473,7 @@ export default function PhotoshootDetailPage() {
                 cursor: 'pointer'
               }}
             >
-              Save Changes
+              Išsaugoti pakeitimus
             </button>
             <button
               type="button"
@@ -1491,7 +1493,7 @@ export default function PhotoshootDetailPage() {
                 cursor: 'pointer'
               }}
             >
-              Cancel
+              Atšaukti
             </button>
           </div>
         </form>
@@ -1501,7 +1503,7 @@ export default function PhotoshootDetailPage() {
       <Modal
         isOpen={shareModalOpen}
         onClose={() => setShareModalOpen(false)}
-        title="Share Photoshoot"
+        title="Bendrinti fotosesiją"
       >
         <form onSubmit={handleShareSubmit} style={{
           display: 'flex',
@@ -1517,7 +1519,7 @@ export default function PhotoshootDetailPage() {
               fontSize: '0.8125rem',
               color: 'var(--foreground)'
             }}>
-              Select users to share with:
+              Pasirinkite vartotojus, su kuriais norite bendrinti:
             </label>
             <div style={{
               maxHeight: '300px',
@@ -1581,7 +1583,7 @@ export default function PhotoshootDetailPage() {
                 cursor: 'pointer'
               }}
             >
-              Save Changes
+              Išsaugoti pakeitimus
             </button>
             <button
               type="button"
@@ -1598,7 +1600,7 @@ export default function PhotoshootDetailPage() {
                 cursor: 'pointer'
               }}
             >
-              Cancel
+              Atšaukti
             </button>
           </div>
         </form>

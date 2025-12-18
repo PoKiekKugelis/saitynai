@@ -23,7 +23,7 @@ export default function RegisterPage() {
     const phoneNumber = formData.get("phoneNumber");
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError("Neatitinka slaptažodžiai");
       setLoading(false);
       return;
     }
@@ -196,6 +196,9 @@ export default function RegisterPage() {
                 }}
               />
             </div>
+            <p style={{ color: '#64748b', fontSize: '0.6875rem', marginTop: '0.25rem' }}>
+              Turi būti bent 3 simboliai
+            </p>
           </div>
 
           {/* Phone Number Field */}
@@ -401,13 +404,13 @@ export default function RegisterPage() {
           textAlign: 'center'
         }}>
           <p style={{ color: '#64748b', fontSize: '0.8125rem' }}>
-            Already have an account?{' '}
+            Jau turite paskyrą?{' '}
             <Link href="/login" style={{
               color: '#1e293b',
               fontWeight: '600',
               textDecoration: 'none'
             }}>
-              Prisijunkite
+              Prisijungti
             </Link>
           </p>
         </div>

@@ -30,6 +30,7 @@ export default function PhotoshootsPage() {
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [error, setError] = useState("")
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -78,6 +79,7 @@ export default function PhotoshootsPage() {
       router.push('/login')
       return
     }
+    setError("")
 
     try {
       // Convert date to ISO 8601 format with time
@@ -91,6 +93,12 @@ export default function PhotoshootsPage() {
           date: dateWithTime
         })
       })
+      const result = await response.json()
+      if (!response.ok) {
+        console.log(response)
+        setError(result.error)
+        return;
+      }
 
       if (response.ok) {
         setModalOpen(false)
@@ -416,7 +424,6 @@ export default function PhotoshootsPage() {
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows={4}
-              minLength={6}
               maxLength={100}
               style={{
                 width: '100%',
@@ -455,7 +462,7 @@ export default function PhotoshootsPage() {
               }}
             />
           </div>
-
+{error && (<div className="text-red-500 text-sm text-center">{error}</div>)}
           <div style={{
             display: 'flex',
             gap: '1rem',

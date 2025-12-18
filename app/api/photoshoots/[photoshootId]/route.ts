@@ -106,7 +106,7 @@ export async function PUT(
     const validationResult = UpdatePhotoshootDTOZ.safeParse(body);
     if (!validationResult.success) {
       return NextResponse.json(
-        { error: "Invalid input", details: validationResult.error.issues },
+        { error: "Neteisinga įvestis", details: validationResult.error.issues },
         { status: 422 }
       );
     }
@@ -118,7 +118,7 @@ export async function PUT(
     });
     if (existing && existing.id !== id) {
       return NextResponse.json(
-        { error: "Title already exists" },
+        { error: "Pavadinimas užimtas" },
         { status: 409 }
       );
     }

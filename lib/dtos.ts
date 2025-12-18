@@ -13,8 +13,8 @@ export interface PhotoshootDTO {
 }
 
 export const CreatePhotoshootDTOZ = z.object({
-  title: z.string().min(1).max(50),
-  description: z.string().optional().nullable(),
+  title: z.string().trim().min(1).max(50),
+  description: z.string().trim().optional().nullable(),
   date: z.string().datetime().optional().nullable(),
   ownerId: z.number().int().positive().optional().nullable(),
   public: z.boolean().optional().default(false),
@@ -24,8 +24,8 @@ export const CreatePhotoshootDTOZ = z.object({
 export type CreatePhotoshootDTO = z.infer<typeof CreatePhotoshootDTOZ>;
 
 export const UpdatePhotoshootDTOZ = z.object({
-  title: z.string().min(1).max(50).optional(),
-  description: z.string().optional().nullable(),
+  title: z.string().trim().min(1).max(50).optional(),
+  description: z.string().trim().optional().nullable(),
   date: z.string().datetime().optional().nullable(),
   ownerId: z.number().int().positive().optional().nullable(),
   public: z.boolean().optional(),
@@ -44,14 +44,14 @@ export interface PhotoDTO {
 
 export const CreatePhotoDTOZ = z.object({
   filename: z.string().min(1).max(100),
-  caption: z.string().optional().nullable(),
+  caption: z.string().trim().optional().nullable(),
 });
 
 export type CreatePhotoDTO = z.infer<typeof CreatePhotoDTOZ>;
 
 export const UpdatePhotoDTOZ = z.object({
   filename: z.string().min(1).max(100).optional(),
-  caption: z.string().optional().nullable(),
+  caption: z.string().trim().optional().nullable(),
 });
 
 export type UpdatePhotoDTO = z.infer<typeof UpdatePhotoDTOZ>;
@@ -65,28 +65,28 @@ export interface CommentDTO {
 }
 
 export const CreateCommentDTOZ = z.object({
-  body: z.string().min(2).max(500).trim(),
+  body: z.string().trim().min(1).max(500)
 });
 
 export type CreateCommentDTO = z.infer<typeof CreateCommentDTOZ>;
 
 export const UpdateCommentDTOZ = z.object({
-  body: z.string().min(2).max(500).trim(),
+  body: z.string().trim().min(1).max(500)
 });
 
 export type UpdateCommentDTO = z.infer<typeof UpdateCommentDTOZ>;
 
 export const CreateUserDTOZ = z.object({
-  email: z.email().max(50).trim(),
-  password: z.string().min(4).max(30).trim(),
-  phoneNumber: z.string().max(20).trim(),
-  username: z.string().min(3).max(50).trim(),
+  email: z.email().trim().max(50),
+  password: z.string().trim().min(4).max(30),
+  phoneNumber: z.string().trim().min(9).max(30).regex(/^[0-9+]+$/),
+  username: z.string().trim().min(3).max(50),
 });
 
 export const UpdateUserDTOZ = z.object({
-  email: z.email().max(50).trim().optional(),
-  password: z.string().min(4).max(30).trim().optional(),
-  phoneNumber: z.string().max(20).trim().optional(),
+  email: z.email().trim().max(50).optional(),
+  password: z.string().trim().min(4).max(30).optional(),
+  phoneNumber: z.string().trim().min(9).max(30).regex(/^[0-9+]+$/).optional(),
 });
 
 export type CreateUserDTO = z.infer<typeof CreateUserDTOZ>;

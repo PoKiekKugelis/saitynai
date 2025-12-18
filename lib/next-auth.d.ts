@@ -14,6 +14,7 @@ declare module "next-auth" {
       email: string
       role: string
     }
+    accessToken?: string
     refreshToken?: string | null
   }
 }
@@ -23,5 +24,8 @@ declare module "next-auth/jwt" {
     id: string
     role: string
     refreshToken?: string
+    accessToken?: string
+    accessTokenExpires?: number
+    error?: string
   }
 }

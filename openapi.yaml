@@ -1,460 +1,51 @@
 openapi: '3.0.3'
 info:
-  title: Photoshoot Management API
+  title: Fotografija API
   description: REST API for managing photoshoots, photos, and comments
   version: '1.0.0'
+
 servers:
   - url: http://localhost:3000/api
     description: Development server
+  - url: https://129.151.213.227:3000/api
+    description: Production server
 
-paths:
-  /photoshoots:
-    get:
-      summary: Get all photoshoots
-      tags:
-        - Photoshoots
-      responses:
-        '200':
-          description: List of photoshoots
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Photoshoot'
-        '500':
-          description: Server error
-          
-    post:
-      summary: Create a new photoshoot
-      tags:
-        - Photoshoots
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreatePhotoshoot'
-      responses:
-        '201':
-          description: Photoshoot created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Photoshoot'
-        '409':
-          description: Photoshoot with this title already exists
-        '422':
-          description: Validation error
-        '500':
-          description: Server error
-
-  /photoshoots/{photoshootId}:
-    get:
-      summary: Get a specific photoshoot
-      tags:
-        - Photoshoots
-      parameters:
-        - name: photoshootId
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Photoshoot details
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Photoshoot'
-        '400':
-          description: Invalid photoshoot ID
-        '404':
-          description: Photoshoot not found
-        '500':
-          description: Server error
-          
-    put:
-      summary: Update a photoshoot
-      tags:
-        - Photoshoots
-      parameters:
-        - name: photoshootId
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdatePhotoshoot'
-      responses:
-        '200':
-          description: Photoshoot updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Photoshoot'
-        '400':
-          description: Invalid photoshoot ID
-        '404':
-          description: Photoshoot not found
-        '422':
-          description: Validation error
-        '500':
-          description: Server error
-          
-    delete:
-      summary: Delete a photoshoot
-      tags:
-        - Photoshoots
-      parameters:
-        - name: photoshootId
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '204':
-          description: Photoshoot deleted
-        '400':
-          description: Invalid photoshoot ID
-        '404':
-          description: Photoshoot not found
-        '500':
-          description: Server error
-
-  /photoshoots/{photoshootId}/photos:
-    get:
-      summary: Get all photos for a photoshoot
-      tags:
-        - Photos
-      parameters:
-        - name: photoshootId
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: List of photos
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Photo'
-        '400':
-          description: Invalid photoshoot ID
-        '404':
-          description: Photoshoot not found
-        '500':
-          description: Server error
-          
-    post:
-      summary: Create a new photo in a photoshoot
-      tags:
-        - Photos
-      parameters:
-        - name: photoshootId
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreatePhoto'
-      responses:
-        '201':
-          description: Photo created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Photo'
-        '400':
-          description: Invalid photoshoot ID
-        '404':
-          description: Photoshoot not found
-        '422':
-          description: Validation error
-        '500':
-          description: Server error
-
-  /photoshoots/{photoshootId}/photos/{photoId}:
-    get:
-      summary: Get a specific photo
-      tags:
-        - Photos
-      parameters:
-        - name: photoshootId
-          in: path
-          required: true
-          schema:
-            type: integer
-        - name: photoId
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Photo details
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Photo'
-        '400':
-          description: Invalid ID
-        '404':
-          description: Photo or photoshoot not found
-        '500':
-          description: Server error
-          
-    put:
-      summary: Update a photo
-      tags:
-        - Photos
-      parameters:
-        - name: photoshootId
-          in: path
-          required: true
-          schema:
-            type: integer
-        - name: photoId
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdatePhoto'
-      responses:
-        '200':
-          description: Photo updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Photo'
-        '400':
-          description: Invalid ID
-        '404':
-          description: Photo or photoshoot not found
-        '422':
-          description: Validation error
-        '500':
-          description: Server error
-          
-    delete:
-      summary: Delete a photo
-      tags:
-        - Photos
-      parameters:
-        - name: photoshootId
-          in: path
-          required: true
-          schema:
-            type: integer
-        - name: photoId
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '204':
-          description: Photo deleted
-        '400':
-          description: Invalid ID
-        '404':
-          description: Photo or photoshoot not found
-        '500':
-          description: Server error
-
-  /photoshoots/{photoshootId}/photos/{photoId}/comments:
-    get:
-      summary: Get all comments for a photo
-      tags:
-        - Comments
-      parameters:
-        - name: photoshootId
-          in: path
-          required: true
-          schema:
-            type: integer
-        - name: photoId
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: List of comments
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Comment'
-        '400':
-          description: Invalid ID
-        '404':
-          description: Photo or photoshoot not found
-        '500':
-          description: Server error
-          
-    post:
-      summary: Create a new comment on a photo
-      tags:
-        - Comments
-      parameters:
-        - name: photoshootId
-          in: path
-          required: true
-          schema:
-            type: integer
-        - name: photoId
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateComment'
-      responses:
-        '201':
-          description: Comment created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Comment'
-        '400':
-          description: Invalid ID
-        '404':
-          description: Photo or photoshoot not found
-        '422':
-          description: Validation error
-        '500':
-          description: Server error
-
-  /photoshoots/{photoshootId}/photos/{photoId}/comments/{commentId}:
-    get:
-      summary: Get a specific comment
-      tags:
-        - Comments
-      parameters:
-        - name: photoshootId
-          in: path
-          required: true
-          schema:
-            type: integer
-        - name: photoId
-          in: path
-          required: true
-          schema:
-            type: integer
-        - name: commentId
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Comment details
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Comment'
-        '400':
-          description: Invalid ID
-        '404':
-          description: Comment not found
-        '500':
-          description: Server error
-          
-    put:
-      summary: Update a comment
-      tags:
-        - Comments
-      parameters:
-        - name: photoshootId
-          in: path
-          required: true
-          schema:
-            type: integer
-        - name: photoId
-          in: path
-          required: true
-          schema:
-            type: integer
-        - name: commentId
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateComment'
-      responses:
-        '200':
-          description: Comment updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Comment'
-        '400':
-          description: Invalid ID
-        '404':
-          description: Comment not found
-        '422':
-          description: Validation error
-        '500':
-          description: Server error
-          
-    delete:
-      summary: Delete a comment
-      tags:
-        - Comments
-      parameters:
-        - name: photoshootId
-          in: path
-          required: true
-          schema:
-            type: integer
-        - name: photoId
-          in: path
-          required: true
-          schema:
-            type: integer
-        - name: commentId
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '204':
-          description: Comment deleted
-        '400':
-          description: Invalid ID
-        '404':
-          description: Comment not found
-        '500':
-          description: Server error
+tags:
+  - name: Photoshoots
+    description: Photoshoot management endpoints
+  - name: Photos
+    description: Photo management endpoints
+  - name: Comments
+    description: Comment management endpoints
+  - name: Users
+    description: User management endpoints
+  - name: Authentication
+    description: Authentication and authorization endpoints
 
 components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT access token from NextAuth
+
   schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+        username:
+          type: string
+        role:
+          type: string
+          enum: [USER, ADMIN]
+
     Photoshoot:
       type: object
       required:
@@ -483,6 +74,15 @@ components:
           type: integer
           nullable: true
           example: 1
+        public:
+          type: boolean
+          default: false
+          description: Whether the photoshoot is publicly visible
+        sharedWith:
+          type: array
+          items:
+            type: integer
+          description: List of user IDs with whom the photoshoot is shared
         created_at:
           type: string
           format: date-time
@@ -510,10 +110,14 @@ components:
           format: date-time
           nullable: true
           example: "2024-06-15T14:30:00Z"
-        ownerId:
-          type: integer
-          nullable: true
-          example: 1
+        public:
+          type: boolean
+          default: false
+        sharedWith:
+          type: array
+          items:
+            type: integer
+          description: List of user IDs to share with
           
     UpdatePhotoshoot:
       type: object
@@ -634,3 +238,724 @@ components:
         body:
           type: string
           example: "Beautiful composition!"
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        password:
+          type: string
+          format: password
+          example: "password123"
+
+    LoginResponse:
+      type: object
+      properties:
+        user:
+          type: object
+          properties:
+            id:
+              type: string
+            email:
+              type: string
+            role:
+              type: string
+        accessToken:
+          type: string
+          description: JWT access token (expires in 15 minutes)
+        refreshToken:
+          type: string
+          description: Refresh token (expires in 7 days)
+
+    RefreshTokenRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          example: "a1b2c3d4e5f6..."
+
+    RefreshTokenResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: New JWT access token
+        expiresIn:
+          type: integer
+          description: Token expiration time in seconds
+          example: 900
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Invalid credentials"
+
+paths:
+  /auth/callback/credentials:
+    post:
+      summary: Sign in with credentials
+      description: Authenticate user with email and password. Returns session with access token and refresh token.
+      operationId: signIn
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Successfully authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Missing email or password
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/signout:
+    post:
+      summary: Sign out
+      description: Signs out the current user and invalidates the session
+      operationId: signOut
+      tags:
+        - Authentication
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Successfully signed out
+        '401':
+          description: Unauthorized
+
+  /auth/session:
+    get:
+      summary: Get current session
+      description: Returns the current user session including access token
+      operationId: getSession
+      tags:
+        - Authentication
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Current session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Not authenticated
+
+  /auth/refresh:
+    post:
+      summary: Refresh access token
+      description: Generate a new access token using a valid refresh token
+      operationId: refreshToken
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '200':
+          description: New access token generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshTokenResponse'
+        '400':
+          description: Refresh token required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Invalid or expired refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Failed to refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /photoshoots:
+    get:
+      summary: Get all photoshoots
+      description: Returns all photoshoots. Supports filtering by public status and owner ID.
+      operationId: listPhotoshoots
+      tags:
+        - Photoshoots
+      parameters:
+        - name: public
+          in: query
+          description: Filter by public visibility
+          schema:
+            type: boolean
+        - name: ownerId
+          in: query
+          description: Filter by owner ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of photoshoots
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Photoshoot'
+        '500':
+          description: Server error
+          
+    post:
+      summary: Create a new photoshoot
+      description: Creates a new photoshoot. Requires authentication.
+      operationId: createPhotoshoot
+      tags:
+        - Photoshoots
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePhotoshoot'
+      responses:
+        '201':
+          description: Photoshoot created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Photoshoot'
+        '401':
+          description: Authentication required
+        '409':
+          description: Photoshoot with this title already exists
+        '422':
+          description: Validation error
+        '500':
+          description: Server error
+
+  /photoshoots/{photoshootId}:
+    parameters:
+      - name: photoshootId
+        in: path
+        required: true
+        description: Photoshoot ID
+        schema:
+          type: integer
+    
+    get:
+      summary: Get a specific photoshoot
+      description: Returns details of a specific photoshoot
+      operationId: getPhotoshoot
+      tags:
+        - Photoshoots
+      responses:
+        '200':
+          description: Photoshoot details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Photoshoot'
+        '400':
+          description: Invalid photoshoot ID
+        '404':
+          description: Photoshoot not found
+        '500':
+          description: Server error
+          
+    put:
+      summary: Update a photoshoot
+      description: Updates an existing photoshoot. Owner or admin can update.
+      operationId: updatePhotoshoot
+      tags:
+        - Photoshoots
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePhotoshoot'
+      responses:
+        '200':
+          description: Photoshoot updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Photoshoot'
+        '400':
+          description: Invalid photoshoot ID
+        '401':
+          description: Authentication required
+        '403':
+          description: Forbidden - Must be owner or admin
+        '404':
+          description: Photoshoot not found
+        '422':
+          description: Validation error
+        '500':
+          description: Server error
+          
+    delete:
+      summary: Delete a photoshoot
+      description: Deletes a photoshoot. Owner or admin can delete.
+      operationId: deletePhotoshoot
+      tags:
+        - Photoshoots
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: Photoshoot deleted
+        '400':
+          description: Invalid photoshoot ID
+        '401':
+          description: Authentication required
+        '403':
+          description: Forbidden - Must be owner or admin
+        '404':
+          description: Photoshoot not found
+        '500':
+          description: Server error
+
+  /photoshoots/{photoshootId}/photos:
+    parameters:
+      - name: photoshootId
+        in: path
+        required: true
+        description: Photoshoot ID
+        schema:
+          type: integer
+          
+    get:
+      summary: Get all photos for a photoshoot
+      description: Returns all photos belonging to a specific photoshoot
+      operationId: listPhotos
+      tags:
+        - Photos
+      responses:
+        '200':
+          description: List of photos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Photo'
+        '400':
+          description: Invalid photoshoot ID
+        '403':
+          description: Forbidden - no permissions to view this photoshoot
+        '404':
+          description: Photoshoot not found
+        '500':
+          description: Server error
+          
+    post:
+      summary: Create a new photo in a photoshoot
+      description: Adds a new photo to a photoshoot. Requires authentication and ownership.
+      operationId: createPhoto
+      tags:
+        - Photos
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePhoto'
+      responses:
+        '201':
+          description: Photo created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Photo'
+        '400':
+          description: Invalid photoshoot ID
+        '401':
+          description: Authentication required
+        '403':
+          description: Forbidden - only owner can add photos
+        '404':
+          description: Photoshoot not found
+        '422':
+          description: Validation error
+        '500':
+          description: Server error
+
+  /photoshoots/{photoshootId}/photos/{photoId}:
+    parameters:
+      - name: photoshootId
+        in: path
+        required: true
+        description: Photoshoot ID
+        schema:
+          type: integer
+      - name: photoId
+        in: path
+        required: true
+        description: Photo ID
+        schema:
+          type: integer
+    
+    get:
+      summary: Get a specific photo
+      description: Returns details of a specific photo
+      operationId: getPhoto
+      tags:
+        - Photos
+      responses:
+        '200':
+          description: Photo details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Photo'
+        '400':
+          description: Invalid ID
+        '404':
+          description: Photo or photoshoot not found
+        '500':
+          description: Server error
+          
+    put:
+      summary: Update a photo
+      description: Updates photo caption. Owner or admin can update.
+      operationId: updatePhoto
+      tags:
+        - Photos
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePhoto'
+      responses:
+        '200':
+          description: Photo updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Photo'
+        '400':
+          description: Invalid ID
+        '404':
+          description: Photo or photoshoot not found
+        '422':
+          description: Validation error
+        '500':
+          description: Server error
+          
+    delete:
+      summary: Delete a photo
+      description: Deletes a photo. Owner or admin can delete.
+      operationId: deletePhoto
+      tags:
+        - Photos
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: Photo deleted
+        '400':
+          description: Invalid ID
+        '404':
+          description: Photo or photoshoot not found
+        '500':
+          description: Server error
+
+  /photoshoots/{photoshootId}/photos/{photoId}/comments:
+    parameters:
+      - name: photoshootId
+        in: path
+        required: true
+        description: Photoshoot ID
+        schema:
+          type: integer
+      - name: photoId
+        in: path
+        required: true
+        description: Photo ID
+        schema:
+          type: integer
+    
+    get:
+      summary: Get all comments for a photo
+      description: Returns all comments on a specific photo
+      operationId: listComments
+      tags:
+        - Comments
+      responses:
+        '200':
+          description: List of comments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Comment'
+        '400':
+          description: Invalid ID
+        '404':
+          description: Photo or photoshoot not found
+        '500':
+          description: Server error
+          
+    post:
+      summary: Create a new comment on a photo
+      description: Adds a comment to a photo. Requires authentication.
+      operationId: createComment
+      tags:
+        - Comments
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateComment'
+      responses:
+        '201':
+          description: Comment created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '400':
+          description: Invalid ID
+        '404':
+          description: Photo or photoshoot not found
+        '422':
+          description: Validation error
+        '500':
+          description: Server error
+
+  /photoshoots/{photoshootId}/photos/{photoId}/comments/{commentId}:
+    parameters:
+      - name: photoshootId
+        in: path
+        required: true
+        description: Photoshoot ID
+        schema:
+          type: integer
+      - name: photoId
+        in: path
+        required: true
+        description: Photo ID
+        schema:
+          type: integer
+      - name: commentId
+        in: path
+        required: true
+        description: Comment ID
+        schema:
+          type: integer
+    
+    get:
+      summary: Get a specific comment
+      description: Returns details of a specific comment
+      operationId: getComment
+      tags:
+        - Comments
+      responses:
+        '200':
+          description: Comment details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '400':
+          description: Invalid ID
+        '404':
+          description: Comment not found
+        '500':
+          description: Server error
+          
+    put:
+      summary: Update a comment
+      description: Updates comment text. Owner or admin can update.
+      operationId: updateComment
+      tags:
+        - Comments
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateComment'
+      responses:
+        '200':
+          description: Comment updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '400':
+          description: Invalid ID
+        '404':
+          description: Comment not found
+        '422':
+          description: Validation error
+        '500':
+          description: Server error
+          
+    delete:
+      summary: Delete a comment
+      description: Deletes a comment. Owner or admin can delete.
+      operationId: deleteComment
+      tags:
+        - Comments
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: Comment deleted
+        '400':
+          description: Invalid ID
+        '404':
+          description: Comment not found
+        '500':
+          description: Server error
+
+  /users:
+    get:
+      summary: List all users
+      description: Returns all users. Admin only.
+      operationId: listUsers
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '401':
+          description: Authentication required
+        '403':
+          description: Forbidden - Admin role required
+
+  /users/{userId}:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: integer
+    
+    get:
+      summary: Get user by ID
+      description: Returns basic user information
+      operationId: getUser
+      tags:
+        - Users
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+    
+    put:
+      summary: Update user
+      description: Updates user information. Requires authentication.
+      operationId: updateUser
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                phoneNumber:
+                  type: string
+      responses:
+        '200':
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Authentication required
+        '403':
+          description: Forbidden
+        '404':
+          description: User not found
+        '422':
+          description: Validation error
+    
+    delete:
+      summary: Delete user
+      description: Deletes a user. Admin only.
+      operationId: deleteUser
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: User deleted
+        '401':
+          description: Authentication required
+        '403':
+          description: Forbidden - Admin role required
+        '404':
+          description: User not found

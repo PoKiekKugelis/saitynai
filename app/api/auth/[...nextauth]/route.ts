@@ -6,6 +6,54 @@ import type { JWT } from "next-auth/jwt"
 import crypto from 'crypto'
 import { cookies } from "next/headers";
 
+async function refreshAccessToken(token: JWT): Promise<JWT> {
+  try {
+    const refreshToken = token.refreshToken as string;
+    
+    if (!refreshToken) {
+      throw new Error('No refresh token');
+    }
+
+    const user = await prisma.user.findFirst({
+      where: {
+        refreshToken,
+        refreshTokenExpiration: {
+          gt: new Date(),
+        },
+      },
+    });
+
+    if (!user) {
+      throw new Error('Invalid or expired refresh token');
+    }
+
+    // Generate new access token
+    const now = Math.floor(Date.now() / 1000);
+    const newAccessToken = await new SignJWT({
+      sub: user.id.toString(),
+      email: user.email,
+      id: user.id.toString(),
+      role: user.role,
+      iat: now,
+      exp: now + 15 * 60, // 15 minutes
+    })
+      .setProtectedHeader({ alg: "HS256", typ: "JWT" })
+      .sign(new TextEncoder().encode(process.env.NEXTAUTH_SECRET!));
+
+    return {
+      ...token,
+      accessToken: newAccessToken,
+      accessTokenExpires: now + 15 * 60,
+    };
+  } catch (error) {
+    console.error('Error refreshing access token:', error);
+    return {
+      ...token,
+      error: 'RefreshAccessTokenError',
+    };
+  }
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -90,22 +138,43 @@ export const authOptions: NextAuthOptions = {
     },
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id
         token.role = user.role
+        token.refreshToken = user.refreshToken
+        
+        // Generate access token
+        const now = Math.floor(Date.now() / 1000);
+        token.accessToken = await new SignJWT({
+          sub: user.id,
+          email: user.email,
+          id: user.id,
+          role: user.role,
+          iat: now,
+          exp: now + 15 * 60, // 15 minutes
+        })
+          .setProtectedHeader({ alg: "HS256", typ: "JWT" })
+          .sign(new TextEncoder().encode(process.env.NEXTAUTH_SECRET!));
+        
+        token.accessTokenExpires = now + 15 * 60;
       }
-      return token
+
+      // Check if access token needs refresh
+      const now = Math.floor(Date.now() / 1000);
+      if (token.accessTokenExpires && now < (token.accessTokenExpires as number)) {
+        return token;
+      }
+
+      // Access token has expired, refresh it
+      return await refreshAccessToken(token);
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string
         session.user.role = token.role as string
-        const user = await prisma.user.findUnique({
-          where: { id: Number(token.id) },
-          select: { refreshToken: true }
-        })
-        session.refreshToken = user?.refreshToken
+        session.accessToken = token.accessToken as string
+        session.refreshToken = token.refreshToken as string
       }
       return session
     }
