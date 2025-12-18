@@ -1088,27 +1088,29 @@ export default function PhotoshootDetailPage() {
                               </span>
                             </div>
 
-                            {session?.user?.id && comment.authorId === parseInt(session.user.id) && (
+                            {session?.user?.id && (comment.authorId === parseInt(session.user.id) || session.user.role === 'ADMIN') && (
                               <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setEditingCommentId(comment.id);
-                                    setEditCommentText(comment.body);
-                                    setError("");1
-                                  }}
-                                  style={{
-                                    background: 'none',
-                                    border: '1px solid #cbd5e1',
-                                    padding: '0.25rem 0.5rem',
-                                    borderRadius: '0.375rem',
-                                    cursor: 'pointer',
-                                    color: '#475569',
-                                    fontSize: '0.75rem'
-                                  }}
-                                >
-                                  Redaguoti
-                                </button>
+                                {comment.authorId === parseInt(session.user.id) && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setEditingCommentId(comment.id);
+                                      setEditCommentText(comment.body);
+                                      setError("");1
+                                    }}
+                                    style={{
+                                      background: 'none',
+                                      border: '1px solid #cbd5e1',
+                                      padding: '0.25rem 0.5rem',
+                                      borderRadius: '0.375rem',
+                                      cursor: 'pointer',
+                                      color: '#475569',
+                                      fontSize: '0.75rem'
+                                    }}
+                                  >
+                                    Redaguoti
+                                  </button>
+                                )}
                                 <button
                                   type="button"
                                   onClick={() => handleDeleteComment(comment.id)}
