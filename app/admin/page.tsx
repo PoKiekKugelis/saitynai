@@ -236,7 +236,7 @@ export default function AdminPage() {
                     fontWeight: '600'
                   }}
                 >
-                  Delete
+                  Naikinti
                 </button>
               </div>
             </div>

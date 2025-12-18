@@ -514,6 +514,29 @@ export default function PhotoshootDetailPage() {
             Redaguoti
           </button>
         )}
+        {session?.user?.id && photoshoot.ownerId === parseInt(session.user.id) && (
+          <button
+            onClick={() => setPhotoModalOpen(true)}
+            style={{
+              position: 'absolute',
+              bottom: '0.75rem',
+              right: '1rem',
+              background: 'transparent',
+              border: '1px solid var(--border)',
+              color: 'var(--foreground)',
+              padding: '0.5rem 0.875rem',
+              borderRadius: '0.375rem',
+              cursor: 'pointer',
+              fontSize: '0.8125rem',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.375rem'
+            }}
+          >
+            Pridėti nuotrauką
+          </button>
+        )}
         <h1 style={{
           fontSize: '1.5rem',
           marginBottom: '0.5rem',
@@ -1046,7 +1069,7 @@ export default function PhotoshootDetailPage() {
                 }}>
                   {comments.length === 0 ? (
                     <p style={{ color: '#64748b', textAlign: 'center', padding: '2rem' }}>
-                      Dar nėra komentarų. Būkite pirmi, kurie parašysite!
+                      Dar nėra komentarų. Būkite pirmas, kuris parašysite!
                     </p>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
